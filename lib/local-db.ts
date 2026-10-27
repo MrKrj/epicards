@@ -7,7 +7,7 @@ import demoCards from '../data/cards.json';
 export type LocalUser = { id: number; username: string; role: string; points: number; created_at: number };
 export const PACK_LIMIT = 10;
 export const PACK_WINDOW_MS = 60 * 60 * 1000;
-export const DROP_WEIGHTS: ReadonlyArray<readonly [string, number]> = [['Commune',60],['Peu commune',30],['Rare',7],['Épique',2.5],['Légendaire',0.4],['Secrète',0.1]];
+export const DROP_WEIGHTS: ReadonlyArray<readonly [string, number]> = [['Commune',55],['Peu commune',36],['Rare',7],['Épique',1.6],['Légendaire',0.35],['Secrète',0.05]];
 
 declare global { var cardverseLocalDb: DatabaseSync | undefined; }
 function openDatabase() {

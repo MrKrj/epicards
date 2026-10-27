@@ -27,7 +27,9 @@ export async function POST(request: Request) {
   const bytes = Buffer.from(await image.arrayBuffer());
   if (!format.matches(bytes)) return NextResponse.json({ error: 'Le contenu du fichier ne correspond pas à son format image.' }, { status: 415 });
   const filename = `${randomUUID()}.${format.extension}`;
-  const directory = join(process.cwd(), 'public', 'uploads', 'cards');
+  // Store runtime uploads in the persistent Docker data volume, not in the
+  // build image's public directory.
+  const directory = join(process.cwd(), 'data', 'uploads', 'cards');
   try {
     await mkdir(directory, { recursive: true });
     await writeFile(join(directory, filename), bytes, { flag: 'wx' });

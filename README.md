@@ -42,9 +42,34 @@ Le booster gratuit est réservé à la collection marquée « gratuite » : cinq
 
 Depuis **Ma collection**, clique sur une carte pour ouvrir sa fiche et recycler un exemplaire contre des fragments : Commune +1, Peu commune +2, Rare +5, Épique +20, Légendaire +100 et Secrète +500. Le solde et le recyclage sont enregistrés dans SQLite.
 
+## Déploiement Docker et illustrations
+
+Le `docker-compose.yml` expose le serveur sur le port `8002` et conserve `/app/data` dans un volume Docker déclaré par Compose. La base SQLite et les illustrations importées sont enregistrées dans ce volume. Les illustrations gardent leurs URL `/uploads/cards/<UUID>.<extension>`, désormais servies depuis le volume et donc conservées après une reconstruction du conteneur.
+
+Pour mettre à jour le VPS depuis le dépôt :
+
+```bash
+git pull
+docker compose up -d --build
+docker compose logs -f epicards
+```
+
+Ne supprime pas le volume de données (`docker compose down -v` le supprimerait). Si des images ont été importées avant ce correctif, copie-les depuis l’ancien conteneur avant de le reconstruire :
+
+```bash
+mkdir -p ./migration-uploads/cards
+docker cp epicards:/app/public/uploads/cards/. ./migration-uploads/cards/
+EPICARDS_VOLUME=$(docker inspect epicards --format '{{range .Mounts}}{{if eq .Destination "/app/data"}}{{.Name}}{{end}}{{end}}')
+echo "$EPICARDS_VOLUME"
+docker compose stop epicards
+docker run --rm -v "$EPICARDS_VOLUME:/data" -v "$PWD/migration-uploads/cards:/import:ro" alpine sh -c 'mkdir -p /data/uploads/cards && cp -an /import/. /data/uploads/cards/'
+```
+
+Vérifie que la variable `EPICARDS_VOLUME` affiche bien le volume existant avant de poursuivre. Ensuite, lance la mise à jour avec `docker compose up -d --build`. Garde `migration-uploads` jusqu’à avoir vérifié l’affichage des images, puis supprime la copie temporaire. Cette migration est nécessaire une seule fois pour les anciennes images.
+
 ## Persistance et sauvegarde
 
-La base se trouve dans `data/cardverse.sqlite` (mode WAL). Pour une sauvegarde simple, arrête `npm run dev`, copie le fichier et ses éventuels fichiers `-wal`/`-shm` vers un emplacement sûr, puis redémarre. Les illustrations importées dans l’espace pédago sont stockées dans `public/uploads/cards/` : copie aussi ce dossier si tu veux sauvegarder toutes les images. Pour restaurer, arrête le serveur, replace la base dans `data/` et les illustrations sous `public/uploads/cards/`.
+La base se trouve dans `data/cardverse.sqlite` (mode WAL) et les illustrations dans `data/uploads/cards/`. Pour une sauvegarde locale, arrête le serveur puis copie la base et le dossier `uploads/cards`. Dans Docker, ces fichiers résident ensemble dans le volume monté sur `/app/data`.
 
 Ne partage pas la base : elle contient les comptes, les adresses e-mail, les hachages de mots de passe et les inventaires. La base et les illustrations importées sont ignorées par Git.
 
@@ -66,4 +91,4 @@ Les tests couvrent la création de compte Epitech, le rejet des autres domaines,
 
 ## Périmètre de cette version locale
 
-Les administrateurs peuvent importer les illustrations des cartes en JPEG, PNG ou WebP (5 Mo maximum) ; les fichiers restent localement dans `public/uploads/cards/`. Cette version permet de créer un compte local, se connecter, consulter le catalogue, ouvrir les boosters de cinq cartes, retourner les cartes, voir sa collection et filtrer/rechercher les cartes. Les données ne sont pas synchronisées entre appareils. La vente et les échanges sont désactivés pour le moment, tout comme les classements, les notifications et l’administration. Pour un usage multi-utilisateur partagé sur Internet, il faudra héberger le serveur et choisir une base de données adaptée plutôt que partager un fichier SQLite.
+Les administrateurs peuvent importer les illustrations des cartes en JPEG, PNG ou WebP (5 Mo maximum) ; les fichiers sont conservés dans `data/uploads/cards/` et, sous Docker, dans le volume persistant. Cette version permet de créer un compte local, se connecter, consulter le catalogue, ouvrir les boosters, voir sa collection et filtrer/rechercher les cartes. Les données ne sont pas synchronisées entre plusieurs instances du serveur.

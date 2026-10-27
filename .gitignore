@@ -4,6 +4,8 @@ node_modules
 .vercel
 data/*.sqlite
 data/*.sqlite-*
+data/uploads/cards/*
+!data/uploads/cards/.gitkeep
 !.env.example
 public/uploads/cards/*
 !public/uploads/cards/.gitkeep
