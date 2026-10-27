@@ -1,0 +1,9 @@
+node_modules
+.next
+.env*
+.vercel
+data/*.sqlite
+data/*.sqlite-*
+!.env.example
+public/uploads/cards/*
+!public/uploads/cards/.gitkeep
