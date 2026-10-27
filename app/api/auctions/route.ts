@@ -62,6 +62,12 @@ export async function POST(request: Request) {
   settleExpiredAuctions(now);
   db.exec('BEGIN IMMEDIATE');
   try {
+    const activeCount = db.prepare(`SELECT COUNT(*) AS count FROM auction_listings
+      WHERE seller_id=? AND status='active' AND ends_at>?`).get(user.id, now) as { count: number };
+    if (activeCount.count >= 5) {
+      db.exec('ROLLBACK');
+      return NextResponse.json({ error: 'Tu as déjà cinq ventes actives. Attends qu’une enchère se termine avant d’en mettre une autre.' }, { status: 409 });
+    }
     const card = db.prepare(`SELECT c.id FROM cards c JOIN card_sets s ON s.id=c.set_id
       WHERE c.id=? AND c.is_active=1 AND s.is_active=1`).get(cardId);
     if (!card) { db.exec('ROLLBACK'); return NextResponse.json({ error: 'Cette carte n’est plus disponible.' }, { status: 404 }); }

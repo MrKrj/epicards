@@ -381,3 +381,95 @@
 .duplicate-rarity-option.rare,.duplicate-rarity-option.epic,.duplicate-rarity-option.legendary,.duplicate-rarity-option.secret{grid-column:1/-1}
 /* Card illustrations stay square in every collection/catalogue/recent-card grid. */
 .collect-card .card-visual{height:auto!important;min-height:0;aspect-ratio:1/1;width:auto}
+
+
+/* Auction areas are grouped by seller; compact cards keep more lots visible. */
+.auction-list-section{margin:22px 0 30px}
+.auction-list-heading{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+.auction-list-heading h3{margin:0;color:var(--foreground,#f2f4fa);font-size:16px}
+.auction-list-heading>span{min-width:22px;padding:3px 7px;background:#202941;border:1px solid #34466f;color:#c8d7ff;font:9px var(--mono);text-align:center}
+.auction-section-empty{margin:0;padding:15px 16px;border:1px dashed var(--border);color:#929aaa;font-size:11px}
+.auction-grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.auction-card-body{padding:11px}
+.auction-card-body h3{font-size:16px}
+.auction-seller{margin-bottom:10px}
+.auction-metrics{gap:8px;padding:9px 0}
+.auction-countdown{padding:9px 0}
+.app-shell[data-theme="light"] .auction-list-heading h3{color:#202634}
+.app-shell[data-theme="light"] .auction-list-heading>span{background:#edf2ff;border-color:#c4d1f2;color:#28447c}
+.app-shell[data-theme="light"] .auction-section-empty{color:#596273}
+@media(max-width:560px){.auction-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr))}}
+
+
+/* Mobile navigation and layout: keep the full menu reachable in an icon rail. */
+@media(max-width:800px){
+  .sidebar{width:58px;padding:16px 6px}
+  .brand{justify-content:center;padding:0 0 20px}
+  .brand>span:last-child,.profile-mini>div:nth-child(2),.nav-label{display:none}
+  .brand-mark{font-size:17px;padding:4px 6px}
+  .profile-mini{justify-content:center;margin:0 0 17px;padding:5px 0;border:0}
+  .sidebar nav{gap:5px}
+  .sidebar nav button,.sidebar nav button:not(.active){display:flex!important;width:100%;height:42px;justify-content:center;gap:0;padding:0;font-size:0}
+  .sidebar nav button svg{display:block;flex:none;width:19px;height:19px}
+  .sidebar nav button.active{font-size:0;border-left:2px solid var(--blue)}
+  .sidebar-bottom>button{width:100%;height:42px;font-size:0;justify-content:center;padding:0}
+  .sidebar-bottom>button svg{display:block;flex:none}
+  .main-area{margin-left:58px;min-width:0}
+  .breadcrumbs{display:none}
+  .topbar{height:56px;padding:0 12px}
+  .top-actions{gap:8px}
+  .content{padding:20px 12px}
+  .welcome-row{align-items:flex-start;gap:10px;margin-bottom:18px}
+  .welcome-row h1{font-size:24px}
+  .welcome-row>.button{padding:9px 10px;font-size:10px;white-space:nowrap}
+  .section-heading{align-items:flex-start;gap:8px;flex-wrap:wrap}
+  .filters{display:flex;align-items:stretch;gap:8px}
+  .filters .search{width:100%;margin:0}
+  .filters .series-filter,.filters .sort-filter{min-width:0;flex:1;flex-wrap:wrap}
+  .filters .series-filter select,.filters .sort-filter select{min-width:0;max-width:100%}
+  .filters .filter-pills{flex-basis:100%}
+  .card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .hero{height:260px}
+  .hero-text{max-width:66%;padding:21px 15px}
+  .hero h2{font-size:19px}
+  .pack-art{inset:0 0 0 38%}
+  .pack{left:30%;width:104px;height:150px}
+  .booster-modal{width:min(600px,100%);padding:18px 14px}
+  .booster-heading{gap:10px;margin-bottom:12px}
+  .booster-heading h2{font-size:21px}
+  .booster-tools{gap:8px}
+  .booster-grid{display:block;position:relative;width:100%;height:326px;margin:0 auto;perspective:1000px}
+  .booster-card{position:absolute;left:50%;top:4px;width:min(230px,calc(100vw - 118px));max-width:none;height:310px;transition:transform .35s ease,opacity .35s ease;pointer-events:none}
+  .booster-card:nth-child(1){z-index:7;transform:translateX(calc(-50% - 8px)) translateY(4px) rotate(-4deg)}
+  .booster-card:nth-child(2){z-index:6;transform:translateX(calc(-50% - 4px)) translateY(1px) rotate(-2deg)}
+  .booster-card:nth-child(3){z-index:5;transform:translateX(-50%) rotate(0)}
+  .booster-card:nth-child(4){z-index:4;transform:translateX(calc(-50% + 4px)) translateY(1px) rotate(2deg)}
+  .booster-card:nth-child(5){z-index:3;transform:translateX(calc(-50% + 8px)) translateY(4px) rotate(4deg)}
+  .booster-card[data-pile-active="true"]{z-index:20!important;transform:translateX(-50%) translateY(0) rotate(0);pointer-events:auto}
+  .booster-card.is-flipped:not([data-pile-active="true"]){z-index:1!important;transform:translateX(calc(-50% + 16px)) translateY(7px) rotate(6deg) scale(.92);opacity:.55}
+  .booster-grid[data-pile-complete="true"]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));height:auto;gap:9px;perspective:none}
+  .booster-grid[data-pile-complete="true"] .booster-card{position:relative;left:auto;top:auto;grid-column:auto;justify-self:stretch;width:100%;max-width:none;height:245px;transform:none!important;z-index:auto!important;opacity:1!important;pointer-events:auto}
+  .selected-reveal{margin:12px 0;padding:10px;gap:8px}
+  .booster-footer-actions{flex-direction:column;gap:8px;margin-top:12px}
+  .booster-footer-actions .button{min-height:42px}
+  .auction-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr))}
+  .admin-columns{grid-template-columns:minmax(0,1fr)}
+  .admin-card-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+  footer{gap:8px;flex-wrap:wrap}
+}
+@media(max-width:420px){
+  .topbar{padding:0 8px}
+  .top-actions{gap:6px}
+  .wallet{padding:6px}
+  .avatar.small{width:26px;height:26px}
+  .welcome-row h1{font-size:21px}
+  .welcome-row>.button{font-size:0;padding:9px}
+  .welcome-row>.button svg{width:17px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat{padding:11px 8px}
+  .admin-card-filters{grid-template-columns:1fr}
+  .booster-heading h2{font-size:18px}
+  .booster-front>b{font-size:15px}
+}
+
+@media(max-width:499px){.auction-grid{grid-template-columns:minmax(0,min(100%,320px));justify-content:center}.auction-card{min-width:0}}
