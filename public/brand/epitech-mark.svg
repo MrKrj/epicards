@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Calque_1" data-name="Calque 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26.52 61.96">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: #7e9afb;
+      }
+    </style>
+  </defs>
+  <g id="Femme">
+    <rect class="cls-1" x="10.65" y="43.8" width="5.23" height="12.94"/>
+    <polygon class="cls-1" points="5.12 44.32 0 43.28 5.95 14.06 20.57 14.06 26.52 43.28 21.4 44.32 16.3 19.29 10.22 19.29 5.12 44.32"/>
+    <rect class="cls-1" x="8.16" width="10.45" height="10.45"/>
+    <rect class="cls-2" x="10.65" y="56.74" width="5.23" height="5.23"/>
+  </g>
+</svg>

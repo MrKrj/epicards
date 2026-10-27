@@ -1,0 +1,162 @@
+[
+  {
+    "name": "Epitech - 1",
+    "description": "Carte de la série Epitech, numéro 1.",
+    "category": "Campus",
+    "rarity": "Commune",
+    "collection_value": 10,
+    "set_name": "Epitech"
+  },
+  {
+    "name": "Epitech - 2",
+    "description": "Carte de la série Epitech, numéro 2.",
+    "category": "Campus",
+    "rarity": "Commune",
+    "collection_value": 10,
+    "set_name": "Epitech"
+  },
+  {
+    "name": "Epitech - 3",
+    "description": "Carte de la série Epitech, numéro 3.",
+    "category": "Campus",
+    "rarity": "Commune",
+    "collection_value": 10,
+    "set_name": "Epitech"
+  },
+  {
+    "name": "Epitech - 4",
+    "description": "Carte de la série Epitech, numéro 4.",
+    "category": "Campus",
+    "rarity": "Commune",
+    "collection_value": 10,
+    "set_name": "Epitech"
+  },
+  {
+    "name": "Epitech - 5",
+    "description": "Carte de la série Epitech, numéro 5.",
+    "category": "Campus",
+    "rarity": "Peu commune",
+    "collection_value": 20,
+    "set_name": "Epitech"
+  },
+  {
+    "name": "Epitech - 6",
+    "description": "Carte de la série Epitech, numéro 6.",
+    "category": "Campus",
+    "rarity": "Peu commune",
+    "collection_value": 20,
+    "set_name": "Epitech"
+  },
+  {
+    "name": "Epitech - 7",
+    "description": "Carte de la série Epitech, numéro 7.",
+    "category": "Campus",
+    "rarity": "Rare",
+    "collection_value": 35,
+    "set_name": "Epitech"
+  },
+  {
+    "name": "Epitech - 8",
+    "description": "Carte de la série Epitech, numéro 8.",
+    "category": "Campus",
+    "rarity": "Rare",
+    "collection_value": 35,
+    "set_name": "Epitech"
+  },
+  {
+    "name": "Epitech - 9",
+    "description": "Carte de la série Epitech, numéro 9.",
+    "category": "Campus",
+    "rarity": "Épique",
+    "collection_value": 60,
+    "set_name": "Epitech"
+  },
+  {
+    "name": "Epitech - 10",
+    "description": "Carte de la série Epitech, numéro 10.",
+    "category": "Campus",
+    "rarity": "Légendaire",
+    "collection_value": 100,
+    "set_name": "Epitech"
+  },
+  {
+    "name": "Somnolence - 1",
+    "description": "Carte de la série Somnolences, numéro 1.",
+    "category": "Culture gaming",
+    "rarity": "Commune",
+    "collection_value": 10,
+    "set_name": "Somnolences"
+  },
+  {
+    "name": "Somnolence - 2",
+    "description": "Carte de la série Somnolences, numéro 2.",
+    "category": "Culture gaming",
+    "rarity": "Commune",
+    "collection_value": 10,
+    "set_name": "Somnolences"
+  },
+  {
+    "name": "Somnolence - 3",
+    "description": "Carte de la série Somnolences, numéro 3.",
+    "category": "Culture gaming",
+    "rarity": "Commune",
+    "collection_value": 10,
+    "set_name": "Somnolences"
+  },
+  {
+    "name": "Somnolence - 4",
+    "description": "Carte de la série Somnolences, numéro 4.",
+    "category": "Culture gaming",
+    "rarity": "Commune",
+    "collection_value": 10,
+    "set_name": "Somnolences"
+  },
+  {
+    "name": "Somnolence - 5",
+    "description": "Carte de la série Somnolences, numéro 5.",
+    "category": "Culture gaming",
+    "rarity": "Peu commune",
+    "collection_value": 20,
+    "set_name": "Somnolences"
+  },
+  {
+    "name": "Somnolence - 6",
+    "description": "Carte de la série Somnolences, numéro 6.",
+    "category": "Culture gaming",
+    "rarity": "Peu commune",
+    "collection_value": 20,
+    "set_name": "Somnolences"
+  },
+  {
+    "name": "Somnolence - 7",
+    "description": "Carte de la série Somnolences, numéro 7.",
+    "category": "Culture gaming",
+    "rarity": "Rare",
+    "collection_value": 35,
+    "set_name": "Somnolences"
+  },
+  {
+    "name": "Somnolence - 8",
+    "description": "Carte de la série Somnolences, numéro 8.",
+    "category": "Culture gaming",
+    "rarity": "Rare",
+    "collection_value": 35,
+    "set_name": "Somnolences"
+  },
+  {
+    "name": "Somnolence - 9",
+    "description": "Carte de la série Somnolences, numéro 9.",
+    "category": "Culture gaming",
+    "rarity": "Épique",
+    "collection_value": 60,
+    "set_name": "Somnolences"
+  },
+  {
+    "name": "Somnolence - 10",
+    "description": "Carte de la série Somnolences, numéro 10.",
+    "category": "Culture gaming",
+    "rarity": "Légendaire",
+    "collection_value": 100,
+    "set_name": "Somnolences"
+  }
+]
