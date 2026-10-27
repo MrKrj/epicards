@@ -1,0 +1,10 @@
+.git
+.next
+node_modules
+.env
+.env.*
+!.env.example
+data/*.sqlite
+data/*.sqlite-*
+data/uploads/cards/**
+public/uploads/cards/**
