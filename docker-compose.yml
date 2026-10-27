@@ -1,0 +1,22 @@
+services:
+  epicards:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: epicards:local
+    container_name: epicards
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    env_file:
+      - path: .env.local
+        required: false
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 8002
+    volumes:
+      - epicards-data:/app/data
+
+volumes:
+  epicards-data:
