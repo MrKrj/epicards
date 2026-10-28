@@ -7,7 +7,7 @@ import demoCards from '../data/cards.json';
 export type LocalUser = { id: number; username: string; role: string; points: number; created_at: number };
 export const PACK_LIMIT = 10;
 export const PACK_WINDOW_MS = 60 * 60 * 1000;
-export const DROP_WEIGHTS: ReadonlyArray<readonly [string, number]> = [['Commune',55],['Peu commune',36],['Rare',7],['Épique',1.6],['Légendaire',0.35],['Secrète',0.05]];
+export const DROP_WEIGHTS: ReadonlyArray<readonly [string, number]> = [['Commune',60],['Peu commune',30],['Rare',7],['Épique',2.5],['Légendaire',0.4],['Secrète',0.1]];
 
 declare global { var cardverseLocalDb: DatabaseSync | undefined; }
 function openDatabase() {
@@ -29,6 +29,7 @@ function openDatabase() {
     CREATE TABLE IF NOT EXISTS cards (
       id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, category TEXT NOT NULL,
       rarity TEXT NOT NULL, collection_value INTEGER NOT NULL, set_id TEXT NOT NULL REFERENCES card_sets(id), image_url TEXT,
+      booster_eligible INTEGER NOT NULL DEFAULT 1 CHECK(booster_eligible IN (0,1)),
       is_active INTEGER NOT NULL DEFAULT 1
     );
     CREATE INDEX IF NOT EXISTS cards_catalog_idx ON cards(is_active, rarity, category, name);
@@ -40,7 +41,7 @@ function openDatabase() {
     CREATE TABLE IF NOT EXISTS card_instances (
       id TEXT PRIMARY KEY, card_id TEXT NOT NULL REFERENCES cards(id), owner_id INTEGER NOT NULL REFERENCES users(id),
       obtained_at INTEGER NOT NULL, source TEXT NOT NULL CHECK(source IN ('drop','trade','reward','admin')),
-      booster_id TEXT REFERENCES booster_openings(id)
+      booster_id TEXT REFERENCES booster_openings(id), is_shiny INTEGER NOT NULL DEFAULT 0 CHECK(is_shiny IN (0,1))
     );
     CREATE INDEX IF NOT EXISTS instances_owner_idx ON card_instances(owner_id, obtained_at DESC);
     CREATE TABLE IF NOT EXISTS drop_history (
@@ -96,9 +97,11 @@ function openDatabase() {
   addColumnIfMissing('card_sets','color',"ALTER TABLE card_sets ADD COLUMN color TEXT NOT NULL DEFAULT '#013afb'");
   if(!hadSetColor)database.prepare("UPDATE card_sets SET color='#7144cc' WHERE name='Somnolences'").run();
   addColumnIfMissing('cards','image_url','ALTER TABLE cards ADD COLUMN image_url TEXT');
+  addColumnIfMissing('cards','booster_eligible','ALTER TABLE cards ADD COLUMN booster_eligible INTEGER NOT NULL DEFAULT 1 CHECK(booster_eligible IN (0,1))');
   addColumnIfMissing('booster_openings','set_id','ALTER TABLE booster_openings ADD COLUMN set_id TEXT REFERENCES card_sets(id)');
   addColumnIfMissing('booster_openings','is_free','ALTER TABLE booster_openings ADD COLUMN is_free INTEGER NOT NULL DEFAULT 1');
   addColumnIfMissing('card_instances','recycled_at','ALTER TABLE card_instances ADD COLUMN recycled_at INTEGER');
+  addColumnIfMissing('card_instances','is_shiny','ALTER TABLE card_instances ADD COLUMN is_shiny INTEGER NOT NULL DEFAULT 0 CHECK(is_shiny IN (0,1))');
   // Seed demo content only on the first launch of a truly empty database.
   // This keeps an intentional catalogue reset empty across server restarts.
   const hasUsers = (database.prepare('SELECT 1 FROM users LIMIT 1').get() as {1:number}|undefined) !== undefined;
