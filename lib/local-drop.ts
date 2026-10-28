@@ -3,7 +3,7 @@ import { db, PACK_LIMIT, PACK_WINDOW_MS, pickRarity } from './local-db';
 import { getDropQuota } from './drop-quota';
 
 type CardRow={id:string;name:string;description:string;rarity:string;category:string;collection_value:number;set_id:string;image_url:string|null};
-const SHINY_DROP_DENOMINATOR=20_000;
+const SHINY_DROP_DENOMINATOR=2_000;
 type CollectionRow={id:string;name:string;is_default:number};
 export type BoosterResult =
  | {ok:true;boosterId:string;cards:Array<CardRow&{is_shiny:boolean}>;instanceIds:string[];remainingPacks:number;retryAt:number|null;cost:number;balance:number}

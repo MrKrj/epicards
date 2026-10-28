@@ -67,6 +67,16 @@ function openDatabase() {
       created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS marketplace_active_idx ON marketplace_listings(status,created_at DESC);
+    CREATE TABLE IF NOT EXISTS cardle_daily (
+      puzzle_day TEXT PRIMARY KEY, card_id TEXT NOT NULL, created_at INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS cardle_guesses (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      puzzle_day TEXT NOT NULL, guess_card_id TEXT NOT NULL, guess_order INTEGER NOT NULL,
+      created_at INTEGER NOT NULL, PRIMARY KEY(user_id,puzzle_day,guess_order),
+      UNIQUE(user_id,puzzle_day,guess_card_id)
+    );
+    CREATE INDEX IF NOT EXISTS cardle_guesses_daily_idx ON cardle_guesses(puzzle_day,user_id,guess_order);
   `);
   // Optional first-admin bootstrap; these secrets remain server-side.
   const adminEmail = process.env.CARDVERSE_ADMIN_EMAIL?.trim().toLowerCase();
@@ -171,6 +181,19 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS notifications_user_idx ON notifications(user_id,created_at DESC);
   CREATE INDEX IF NOT EXISTS notifications_unread_idx ON notifications(user_id,read_at,created_at DESC);
+`);
+// Daily card guessing game. Kept additive so existing SQLite inventories remain intact.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS cardle_daily (
+    puzzle_day TEXT PRIMARY KEY, card_id TEXT NOT NULL, created_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS cardle_guesses (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    puzzle_day TEXT NOT NULL, guess_card_id TEXT NOT NULL, guess_order INTEGER NOT NULL,
+    created_at INTEGER NOT NULL, PRIMARY KEY(user_id,puzzle_day,guess_order),
+    UNIQUE(user_id,puzzle_day,guess_card_id)
+  );
+  CREATE INDEX IF NOT EXISTS cardle_guesses_daily_idx ON cardle_guesses(puzzle_day,user_id,guess_order);
 `);
 // The dev server keeps this SQLite singleton alive across HMR. Apply the
 // latest additive migration to that existing connection too, so routes that

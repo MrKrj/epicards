@@ -676,3 +676,69 @@
 @media(prefers-reduced-motion:reduce){.collect-card.shiny .card-visual:after{animation:none}}
 
 @media(max-width:800px){.booster-grid:not([data-pile-complete=true]) .booster-card:last-child{grid-column:auto!important;width:min(230px,calc(100vw - 118px))!important;max-width:none!important}}
+
+/* Daily card guessing mini-game in the pedagogical demo area. */
+.cardle-panel{display:flex;flex-direction:column;gap:16px;padding:clamp(16px,3vw,28px)}
+.cardle-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.cardle-intro h2{margin:0 0 8px;color:#f5f6fb;font-size:clamp(22px,3vw,31px)}
+.cardle-intro p{max-width:640px;margin:0;color:#a0a6b5;font-size:14px;line-height:1.65}
+.cardle-date{display:grid;gap:6px;min-width:210px;padding:13px 15px;border:1px solid #586b9a66;background:#121b30;color:#dce5ff}
+.cardle-date span,.cardle-date small{font:10px var(--mono);letter-spacing:.06em;color:#9baaca}
+.cardle-date strong{font-size:15px;text-transform:capitalize}
+.cardle-search-wrap{position:relative;width:min(100%,620px);z-index:3}
+.cardle-search{height:50px;display:flex;align-items:center;gap:10px;padding:0 14px;border:1px solid #414b60;background:#151923;color:#aab7d1}
+.cardle-search input{width:100%;border:0;outline:0;background:transparent;color:#f4f6fb;font-size:15px}
+.cardle-suggestions{position:absolute;top:calc(100% + 5px);left:0;right:0;max-height:300px;overflow:auto;background:#171b25;border:1px solid #454e62;box-shadow:0 14px 32px #0009}
+.cardle-suggestions button{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border:0;border-bottom:1px solid #ffffff12;background:transparent;color:#f0f2f8;text-align:left;font-size:15px}
+.cardle-suggestions button:hover{background:#24314b}
+.cardle-suggestions button>span{color:#a9bcff}.cardle-suggestions button small{margin-left:auto;color:#8995aa;font:10px var(--mono)}
+.cardle-progress{color:#9299a8;font:11px var(--mono);letter-spacing:.025em}
+.cardle-reset-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 13px;border:1px solid #ffffff18;background:#12151d;color:#aeb5c4;font-size:13px}
+.cardle-reset-row button{flex:none;padding:8px 12px;border:1px solid #59657d;background:#202738;color:#e6ebf7;font-size:13px;font-weight:650;cursor:pointer}
+.cardle-reset-row button:hover:not(:disabled){border-color:#7698ff;background:#293958}
+.cardle-reset-row button:disabled{opacity:.55;cursor:wait}
+
+.cardle-error{padding:11px 14px;border:1px solid #ff6a6a66;background:#361c22;color:#ffd5d5;font-size:13px}
+.cardle-win{display:flex;flex-direction:column;gap:7px;padding:20px;border:1px solid #00ff9766;background:linear-gradient(110deg,#123529,#14221d);color:#d9ffeb}
+.cardle-win>span{font:10px var(--mono);letter-spacing:.12em;color:#5bffba}.cardle-win>strong{font-size:25px}.cardle-win>small{color:#b6d7c7;font-size:13px}
+.cardle-table-scroll{width:100%;overflow-x:auto;border:1px solid #ffffff16}
+.cardle-table{min-width:820px}
+.cardle-table-head,.cardle-guess-row{display:grid;grid-template-columns:minmax(210px,1.55fr) repeat(4,minmax(145px,1fr));align-items:stretch}
+.cardle-table-head{background:#141720;color:#aab1c1;font:10px var(--mono);letter-spacing:.07em}
+.cardle-table-head>span{padding:12px 11px;border-right:1px solid #ffffff10}
+.cardle-guess-row{border-top:1px solid #ffffff14;background:#191c23}
+.cardle-guessed-name,.cardle-cell{min-width:0;min-height:72px;padding:11px 12px;border-right:1px solid #ffffff10}
+.cardle-guessed-name{display:flex;align-items:center;gap:10px;color:#f0f2f8}
+.cardle-guessed-card{display:flex;align-items:center;gap:10px;min-width:0}
+.cardle-guessed-card img,.cardle-guessed-card>span{width:46px;height:46px;flex:none;object-fit:cover;border-radius:5px}
+.cardle-guessed-card>span{display:grid;place-items:center;color:#a9bcff;font-size:23px}
+.cardle-guessed-name strong{font-size:14px;line-height:1.35;overflow-wrap:anywhere}.cardle-guessed-name>b{margin-left:auto;color:#58ffb8;font-size:18px}
+.cardle-guessed-name.is-correct{background:#00ff9719}
+.cardle-cell{display:flex;align-items:center;gap:9px;color:#ddd;font-size:14px;line-height:1.35}
+.cardle-cell span{overflow-wrap:anywhere}
+.cardle-cell i{width:24px;height:24px;flex:none;display:grid;place-items:center;border-radius:50%;background:#7c3540;color:#fff;font-size:14px;font-style:normal;font-weight:700}
+.cardle-cell.correct{background:#00ff971c;color:#dcffef}.cardle-cell.correct i{background:#00a96a}
+.cardle-cell.higher,.cardle-cell.lower{background:#123afb15;color:#d5e0ff}.cardle-cell.higher i,.cardle-cell.lower i{background:#315df5}
+.cardle-cell.wrong{background:#f15a5a0c;color:#c2c5cd}
+@keyframes cardle-clue-reveal{0%{opacity:0;transform:perspective(500px) rotateX(72deg) translateY(-8px);filter:brightness(.55)}68%{opacity:1;transform:perspective(500px) rotateX(-5deg) translateY(1px);filter:brightness(1.3)}100%{opacity:1;transform:perspective(500px) rotateX(0) translateY(0);filter:brightness(1)}}
+.cardle-guess-row.is-revealing .cardle-guessed-name{animation:cardle-clue-reveal .48s cubic-bezier(.2,.8,.2,1) both}
+.cardle-guess-row.is-revealing .cardle-cell{opacity:0;animation:cardle-clue-reveal .48s cubic-bezier(.2,.8,.2,1) both}
+.cardle-guess-row.is-revealing>.cardle-cell:nth-child(2){animation-delay:.18s}
+.cardle-guess-row.is-revealing>.cardle-cell:nth-child(3){animation-delay:.4s}
+.cardle-guess-row.is-revealing>.cardle-cell:nth-child(4){animation-delay:.62s}
+.cardle-guess-row.is-revealing>.cardle-cell:nth-child(5){animation-delay:.84s}
+.app-shell[data-theme="light"] .cardle-intro h2{color:#202634}
+.app-shell[data-theme="light"] .cardle-date{background:#f1f4fb;border-color:#cbd4e6;color:#202634}
+.app-shell[data-theme="light"] .cardle-date span,.app-shell[data-theme="light"] .cardle-date small{color:#66738c}
+.app-shell[data-theme="light"] .cardle-search{background:#fff;border-color:#cbd2df;color:#55627b}
+.app-shell[data-theme="light"] .cardle-search input{color:#202634}
+.app-shell[data-theme="light"] .cardle-suggestions{background:#fff;border-color:#cbd2df}
+.app-shell[data-theme="light"] .cardle-suggestions button{color:#202634;border-color:#e4e7ec}
+.app-shell[data-theme="light"] .cardle-suggestions button:hover{background:#f2f5fa}
+.app-shell[data-theme="light"] .cardle-table-head,.app-shell[data-theme="light"] .cardle-guess-row{background:#f4f6fa;color:#586176}
+.app-shell[data-theme="light"] .cardle-reset-row{background:#f4f6fa;border-color:#dce1eb;color:#596176}
+.app-shell[data-theme="light"] .cardle-reset-row button{background:#fff;border-color:#c8d0df;color:#293246}
+.app-shell[data-theme="light"] .cardle-guessed-name{color:#202634}
+.app-shell[data-theme="light"] .cardle-cell{color:#303847}
+@media(max-width:700px){.cardle-intro{flex-direction:column}.cardle-date{min-width:0;width:100%}.cardle-table{min-width:820px}.cardle-reset-row{align-items:flex-start;flex-direction:column}.cardle-reset-row button{align-self:flex-end}}
+@media(prefers-reduced-motion:reduce){.cardle-guess-row.is-revealing .cardle-guessed-name,.cardle-guess-row.is-revealing .cardle-cell{animation:none;opacity:1;transform:none;filter:none}}
