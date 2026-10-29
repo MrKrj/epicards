@@ -3,10 +3,10 @@ import { db, PACK_LIMIT, PACK_WINDOW_MS, pickRarity } from './local-db';
 import { getDropQuota } from './drop-quota';
 
 type CardRow={id:string;name:string;description:string;rarity:string;category:string;collection_value:number;set_id:string;image_url:string|null};
-const SHINY_DROP_DENOMINATOR=2_000;
+const SHINY_DROP_DENOMINATOR=250; // 0.4% par carte
 type CollectionRow={id:string;name:string;is_default:number};
 export type BoosterResult =
- | {ok:true;boosterId:string;cards:Array<CardRow&{is_shiny:boolean}>;instanceIds:string[];remainingPacks:number;retryAt:number|null;cost:number;balance:number}
+ | {ok:true;boosterId:string;cards:Array<CardRow&{is_shiny:boolean}>;instanceIds:string[];recyclableDuplicateCount:number;remainingPacks:number;retryAt:number|null;cost:number;balance:number}
  | {ok:false;retryAt:number;error?:string};
 
 /** One atomic free or paid booster operation, including currency debit and five unique card instances. */
@@ -32,6 +32,9 @@ export function openBooster(userId:number,setId:string|null=null,free=true,now=D
   const boosterId=randomUUID();
   db.prepare('INSERT INTO booster_openings(id,user_id,opened_at,set_id,is_free) VALUES(?,?,?,?,?)').run(boosterId,userId,now,collection.id,free?1:0);
   const allCards:Array<CardRow&{is_shiny:boolean}>=[],instanceIds:string[]=[];
+  let recyclableDuplicateCount=0;
+  const hasPriorVariant=db.prepare(`SELECT 1 FROM card_instances WHERE owner_id=? AND card_id=? AND is_shiny=?
+   AND recycled_at IS NULL AND (booster_id IS NULL OR booster_id<>?) LIMIT 1`);
   const addInstance=db.prepare("INSERT INTO card_instances(id,card_id,owner_id,obtained_at,source,booster_id,is_shiny) VALUES(?,?,?,?,'drop',?,?)");
   const addHistory=db.prepare('INSERT INTO drop_history(user_id,instance_id,created_at) VALUES(?,?,?)');
   for(let i=0;i<5;i++){
@@ -40,10 +43,11 @@ export function openBooster(userId:number,setId:string|null=null,free=true,now=D
    if(!pool.length)pool=db.prepare('SELECT id,name,description,rarity,category,collection_value,set_id,image_url FROM cards WHERE is_active=1 AND booster_eligible=1 AND set_id=?').all(collection.id) as CardRow[];
    if(!pool.length)throw new Error('Cette collection ne contient aucune carte active.');
    const card=pool[randomInt(pool.length)],instanceId=randomUUID(),isShiny=randomInt(SHINY_DROP_DENOMINATOR)===0;
+   if(!isShiny&&(card.rarity==='Commune'||card.rarity==='Peu commune')&&hasPriorVariant.get(userId,card.id,0,boosterId))recyclableDuplicateCount++;
    addInstance.run(instanceId,card.id,userId,now,boosterId,Number(isShiny));addHistory.run(userId,instanceId,now);allCards.push({...card,is_shiny:isShiny});instanceIds.push(instanceId);
   }
   db.exec('COMMIT');
   const after=getDropQuota(free?[...history.map(row=>row.opened_at),now]:history.map(row=>row.opened_at),now);
-  return {ok:true,boosterId,cards:allCards,instanceIds,remainingPacks:after.available,retryAt:after.retryAt,cost,balance:newBalance};
+  return {ok:true,boosterId,cards:allCards,instanceIds,recyclableDuplicateCount,remainingPacks:after.available,retryAt:after.retryAt,cost,balance:newBalance};
  } catch(error){try{db.exec('ROLLBACK')}catch{};throw error;}
 }

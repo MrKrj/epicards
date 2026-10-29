@@ -8,7 +8,7 @@ export type CardleAttributes = {
 };
 
 export type CardleHint = 'correct' | 'wrong' | 'higher' | 'lower';
-export type CardleFeedback = Record<'name' | 'rarity' | 'category' | 'series' | 'booster', CardleHint>;
+export type CardleFeedback = Record<'name' | 'nameLength' | 'rarity' | 'category' | 'series' | 'booster', CardleHint>;
 
 const rarityOrder: Record<string, number> = {
   Commune: 0,
@@ -29,6 +29,7 @@ export function compareCardleGuess(answer: CardleAttributes, guess: CardleAttrib
   const guessRarity = rarityOrder[guess.rarity] ?? -1;
   return {
     name: answer.id === guess.id ? 'correct' : 'wrong',
+    nameLength: directionalHint(Array.from(guess.name).length, Array.from(answer.name).length),
     rarity: answer.rarity === guess.rarity ? 'correct' : directionalHint(guessRarity, answerRarity),
     category: answer.category === guess.category ? 'correct' : 'wrong',
     series: answer.set_name === guess.set_name ? 'correct' : 'wrong',

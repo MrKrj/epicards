@@ -9,7 +9,7 @@ const answer: CardleAttributes = {
 describe('indices de Cardle', () => {
   it('valide tous les attributs lorsque la carte est trouvée', () => {
     expect(compareCardleGuess(answer, answer)).toEqual({
-      name: 'correct', rarity: 'correct', category: 'correct', series: 'correct', booster: 'correct',
+      name: 'correct', nameLength: 'correct', rarity: 'correct', category: 'correct', series: 'correct', booster: 'correct',
     });
   });
 
@@ -25,5 +25,10 @@ describe('indices de Cardle', () => {
     expect(feedback.category).toBe('wrong');
     expect(feedback.series).toBe('wrong');
     expect(feedback.booster).toBe('wrong');
+  });
+
+  it('indique si le nom cible est plus long ou plus court', () => {
+    expect(compareCardleGuess({ ...answer, name: 'Carte mystère longue' }, { ...answer, id: 'short', name: 'Carte' }).nameLength).toBe('higher');
+    expect(compareCardleGuess({ ...answer, name: 'Carte' }, { ...answer, id: 'long', name: 'Carte mystère longue' }).nameLength).toBe('lower');
   });
 });

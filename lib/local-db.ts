@@ -77,6 +77,37 @@ function openDatabase() {
       UNIQUE(user_id,puzzle_day,guess_card_id)
     );
     CREATE INDEX IF NOT EXISTS cardle_guesses_daily_idx ON cardle_guesses(puzzle_day,user_id,guess_order);
+  CREATE TABLE IF NOT EXISTS cardle_rewards (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    puzzle_day TEXT NOT NULL,
+    fragments INTEGER NOT NULL CHECK(fragments>0),
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY(user_id,puzzle_day)
+  );
+  CREATE TABLE IF NOT EXISTS blurred_card_daily (
+    puzzle_day TEXT PRIMARY KEY,
+    card_id TEXT NOT NULL,
+    focus_x INTEGER NOT NULL,
+    focus_y INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS blurred_card_guesses (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    puzzle_day TEXT NOT NULL,
+    guess_card_id TEXT NOT NULL,
+    guess_order INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY(user_id,puzzle_day,guess_order),
+    UNIQUE(user_id,puzzle_day,guess_card_id)
+  );
+  CREATE INDEX IF NOT EXISTS blurred_card_guesses_daily_idx ON blurred_card_guesses(puzzle_day,user_id,guess_order);
+  CREATE TABLE IF NOT EXISTS blurred_card_rewards (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    puzzle_day TEXT NOT NULL,
+    fragments INTEGER NOT NULL CHECK(fragments>0),
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY(user_id,puzzle_day)
+  );
   `);
   // Optional first-admin bootstrap; these secrets remain server-side.
   const adminEmail = process.env.CARDVERSE_ADMIN_EMAIL?.trim().toLowerCase();
@@ -194,6 +225,37 @@ db.exec(`
     UNIQUE(user_id,puzzle_day,guess_card_id)
   );
   CREATE INDEX IF NOT EXISTS cardle_guesses_daily_idx ON cardle_guesses(puzzle_day,user_id,guess_order);
+  CREATE TABLE IF NOT EXISTS cardle_rewards (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    puzzle_day TEXT NOT NULL,
+    fragments INTEGER NOT NULL CHECK(fragments>0),
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY(user_id,puzzle_day)
+  );
+  CREATE TABLE IF NOT EXISTS blurred_card_daily (
+    puzzle_day TEXT PRIMARY KEY,
+    card_id TEXT NOT NULL,
+    focus_x INTEGER NOT NULL,
+    focus_y INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS blurred_card_guesses (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    puzzle_day TEXT NOT NULL,
+    guess_card_id TEXT NOT NULL,
+    guess_order INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY(user_id,puzzle_day,guess_order),
+    UNIQUE(user_id,puzzle_day,guess_card_id)
+  );
+  CREATE INDEX IF NOT EXISTS blurred_card_guesses_daily_idx ON blurred_card_guesses(puzzle_day,user_id,guess_order);
+  CREATE TABLE IF NOT EXISTS blurred_card_rewards (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    puzzle_day TEXT NOT NULL,
+    fragments INTEGER NOT NULL CHECK(fragments>0),
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY(user_id,puzzle_day)
+  );
 `);
 // The dev server keeps this SQLite singleton alive across HMR. Apply the
 // latest additive migration to that existing connection too, so routes that

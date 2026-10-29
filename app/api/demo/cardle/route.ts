@@ -51,31 +51,62 @@ function getDailyPuzzle(day: string): PuzzleCard | null {
   }
 }
 
-function responseFor(userId: number, day: string, answer: PuzzleCard) {
+function responseFor(userId: number, day: string, answer: PuzzleCard, awardedNow = false) {
   const options = db.prepare(`SELECT id,name FROM cards WHERE is_active=1 ORDER BY name COLLATE NOCASE`).all() as Array<{ id: string; name: string }>;
   const guesses = (db.prepare(`SELECT c.id,c.name,c.description,c.rarity,c.category,c.booster_eligible,
     c.image_url,s.name AS set_name FROM cardle_guesses g JOIN cards c ON c.id=g.guess_card_id
     JOIN card_sets s ON s.id=c.set_id WHERE g.user_id=? AND g.puzzle_day=? ORDER BY g.guess_order`).all(userId, day) as PuzzleCard[])
     .map((card) => ({ card, feedback: compareCardleGuess(answer, card), won: card.id === answer.id }));
   const solved = guesses.some((guess) => guess.won);
-  return { day, options, guesses, solved, answer: solved ? answer : undefined };
+  const claimedReward = db.prepare('SELECT fragments FROM cardle_rewards WHERE user_id=? AND puzzle_day=?').get(userId, day) as { fragments: number } | undefined;
+  const rewardRow = solved ? claimedReward : undefined;
+  return {
+    day, options, guesses, solved, completedToday: Boolean(claimedReward), answer: solved ? answer : undefined,
+    reward: rewardRow ? { fragments: rewardRow.fragments, claimed: true, awardedNow } : undefined,
+  };
 }
 
-async function adminUser() {
+function grantDailyReward(userId: number, day: string) {
+  if (db.prepare('SELECT 1 FROM cardle_rewards WHERE user_id=? AND puzzle_day=?').get(userId, day)) return false;
+  const fragments = 50;
+  db.prepare('UPDATE users SET points=points+? WHERE id=?').run(fragments, userId);
+  const balance = (db.prepare('SELECT points FROM users WHERE id=?').get(userId) as { points: number }).points;
+  const now = Date.now();
+  db.prepare('INSERT INTO cardle_rewards(user_id,puzzle_day,fragments,created_at) VALUES(?,?,?,?)').run(userId, day, fragments, now);
+  db.prepare('INSERT INTO wallet_transactions(user_id,amount,balance_after,reason,reference_id,created_at) VALUES(?,?,?,?,?,?)')
+    .run(userId, fragments, balance, 'récompense_jeu_carte_mystère', day, now);
+  return true;
+}
+
+async function authenticatedUser() {
   const user = await currentUser();
   if (!user) return { user: null, response: NextResponse.json({ error: 'Connexion requise.' }, { status: 401 }) };
-  if (user.role !== 'admin') return { user: null, response: NextResponse.json({ error: 'Accès réservé à l’espace pédagogique.' }, { status: 403 }) };
   return { user, response: null };
 }
 
 export async function GET() {
-  const auth = await adminUser();
+  const auth = await authenticatedUser();
   if (auth.response || !auth.user) return auth.response;
   try {
     const day = puzzleDay();
     const answer = getDailyPuzzle(day);
     if (!answer) return NextResponse.json({ error: 'Ajoute des cartes actives pour lancer le jeu.' }, { status: 404 });
-    return NextResponse.json(responseFor(auth.user.id, day, answer));
+    const state = responseFor(auth.user.id, day, answer);
+    if (state.solved && !state.reward) {
+      let awardedNow = false;
+      db.exec('BEGIN IMMEDIATE');
+      try {
+        if (db.prepare('SELECT 1 FROM cardle_guesses WHERE user_id=? AND puzzle_day=? AND guess_card_id=?').get(auth.user.id, day, answer.id)) {
+          awardedNow = grantDailyReward(auth.user.id, day);
+        }
+        db.exec('COMMIT');
+      } catch (error) {
+        try { db.exec('ROLLBACK'); } catch {}
+        throw error;
+      }
+      return NextResponse.json(responseFor(auth.user.id, day, answer, awardedNow));
+    }
+    return NextResponse.json(state);
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Impossible de charger le jeu du jour.' }, { status: 500 });
@@ -85,7 +116,7 @@ export async function GET() {
 const guessSchema = z.object({ cardId: z.string().min(1).max(100) });
 
 export async function POST(request: Request) {
-  const auth = await adminUser();
+  const auth = await authenticatedUser();
   if (auth.response || !auth.user) return auth.response;
   const parsed = guessSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: 'Choisis une carte valide.' }, { status: 400 });
@@ -95,6 +126,7 @@ export async function POST(request: Request) {
     if (!answer) return NextResponse.json({ error: 'Ajoute des cartes actives pour lancer le jeu.' }, { status: 404 });
     const guess = cardById(parsed.data.cardId);
     if (!guess) return NextResponse.json({ error: 'Cette carte n’est pas disponible.' }, { status: 404 });
+    let awardedNow = false;
     db.exec('BEGIN IMMEDIATE');
     try {
       if (db.prepare('SELECT 1 FROM cardle_guesses WHERE user_id=? AND puzzle_day=? AND guess_card_id=?').get(auth.user.id, day, answer.id)) {
@@ -108,12 +140,13 @@ export async function POST(request: Request) {
       const guessOrder = (db.prepare('SELECT COALESCE(MAX(guess_order),0)+1 AS next FROM cardle_guesses WHERE user_id=? AND puzzle_day=?').get(auth.user.id, day) as { next: number }).next;
       db.prepare('INSERT INTO cardle_guesses(user_id,puzzle_day,guess_card_id,guess_order,created_at) VALUES(?,?,?,?,?)')
         .run(auth.user.id, day, guess.id, guessOrder, Date.now());
+      if (guess.id === answer.id) awardedNow = grantDailyReward(auth.user.id, day);
       db.exec('COMMIT');
     } catch (error) {
       try { db.exec('ROLLBACK'); } catch {}
       throw error;
     }
-    return NextResponse.json(responseFor(auth.user.id, day, answer));
+    return NextResponse.json(responseFor(auth.user.id, day, answer, awardedNow));
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Impossible d’enregistrer cette proposition.' }, { status: 500 });
@@ -122,8 +155,9 @@ export async function POST(request: Request) {
 
 
 export async function DELETE() {
-  const auth = await adminUser();
+  const auth = await authenticatedUser();
   if (auth.response || !auth.user) return auth.response;
+  if (auth.user.role !== 'admin') return NextResponse.json({ error: 'Réservé aux administrateurs.' }, { status: 403 });
   try {
     const day = puzzleDay();
     const answer = getDailyPuzzle(day);
