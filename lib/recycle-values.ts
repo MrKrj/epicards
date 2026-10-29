@@ -1,10 +1,10 @@
 export const RECYCLE_VALUES: Readonly<Record<string, number>> = {
-  Commune: 2,
-  'Peu commune': 5,
-  Rare: 15,
-  Épique: 50,
-  Légendaire: 100,
-  Secrète: 250,
+  Commune: 3,
+  'Peu commune': 7,
+  Rare: 20,
+  Épique: 75,
+  Légendaire: 150,
+  Secrète: 400,
 };
 
 export function getRecycleValue(rarity: string, isShiny = false): number {

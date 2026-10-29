@@ -840,6 +840,18 @@
 .blurred-celebration{margin-top:0}
 .blurred-celebration>.cardle-found-card{display:none}
 .blurred-win{scroll-margin-block:38vh}
+.described-game-panel{min-width:0}
+.described-clue-card{position:relative;overflow:hidden;padding:clamp(20px,4vw,34px);border:1px solid #8093d044;border-radius:18px;background:radial-gradient(ellipse at 8% 0%,#315dff18,transparent 48%),linear-gradient(140deg,#1b2130,#12161e);box-shadow:0 16px 42px #0003,inset 0 1px #ffffff10;animation:minigame-enter .55s cubic-bezier(.2,.8,.2,1) both}
+.described-clue-card::after{position:absolute;inset:0 auto 0 -45%;width:28%;content:"";transform:skewX(-18deg);background:linear-gradient(90deg,transparent,#ffffff0b,transparent);pointer-events:none;animation:described-clue-sheen 8s ease-in-out infinite}
+.described-clue-card .eyebrow{color:#9fb1ff}
+.described-clue-card p{position:relative;z-index:1;margin:15px 0 0;color:#f3f5fb;font-size:clamp(17px,2.1vw,23px);font-weight:560;line-height:1.75;white-space:pre-line;text-wrap:pretty}
+.described-search-wrap{position:relative;width:min(100%,620px);z-index:2;margin-top:2px}
+.described-celebration{width:100%;margin-top:3px}
+.described-win{scroll-margin-block:38vh}
+.app-shell[data-theme="light"] .described-clue-card{border-color:#cbd5eb;background:radial-gradient(ellipse at 8% 0%,#718cff12,transparent 48%),linear-gradient(140deg,#fff,#f4f6fb);box-shadow:0 16px 42px #32415d12,inset 0 1px #fff}
+.app-shell[data-theme="light"] .described-clue-card .eyebrow{color:#526cae}
+.app-shell[data-theme="light"] .described-clue-card p{color:#202a3c}
+@keyframes described-clue-sheen{0%,62%{transform:translateX(0) skewX(-18deg);opacity:0}72%{opacity:.8}88%,100%{transform:translateX(560%) skewX(-18deg);opacity:0}}
 .app-shell[data-theme="light"] .blurred-puzzle-layout{background:#fff;border-color:#dce1eb}
 .app-shell[data-theme="light"] .blurred-card-frame{background:#edf1f8;border-color:#8794ad}
 .app-shell[data-theme="light"] .blurred-image-vignette{background:linear-gradient(180deg,#111a2ab0,transparent 28%,transparent 68%,#111a2ab0)}
@@ -847,6 +859,8 @@
  .cardle-panel{gap:19px}
  .cardle-intro,.blurred-game-intro{flex-direction:column;gap:14px}
  .cardle-date{min-width:0;width:100%}
+ .described-clue-card{padding:20px 17px}
+ .described-clue-card p{font-size:17px;line-height:1.65}
  .cardle-reset-row{align-items:flex-start;flex-direction:column;gap:10px}
  .cardle-reset-row button{align-self:flex-end}
  .blurred-puzzle-layout{grid-template-columns:minmax(0,1fr);justify-items:center;gap:21px;padding:15px}

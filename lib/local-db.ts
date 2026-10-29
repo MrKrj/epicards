@@ -256,6 +256,26 @@ db.exec(`
     created_at INTEGER NOT NULL,
     PRIMARY KEY(user_id,puzzle_day)
   );
+  CREATE TABLE IF NOT EXISTS described_card_daily (
+    puzzle_day TEXT PRIMARY KEY, card_id TEXT NOT NULL, created_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS described_card_guesses (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    puzzle_day TEXT NOT NULL,
+    guess_card_id TEXT NOT NULL,
+    guess_order INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY(user_id,puzzle_day,guess_order),
+    UNIQUE(user_id,puzzle_day,guess_card_id)
+  );
+  CREATE INDEX IF NOT EXISTS described_card_guesses_daily_idx ON described_card_guesses(puzzle_day,user_id,guess_order);
+  CREATE TABLE IF NOT EXISTS described_card_rewards (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    puzzle_day TEXT NOT NULL,
+    fragments INTEGER NOT NULL CHECK(fragments>0),
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY(user_id,puzzle_day)
+  );
 `);
 // The dev server keeps this SQLite singleton alive across HMR. Apply the
 // latest additive migration to that existing connection too, so routes that
