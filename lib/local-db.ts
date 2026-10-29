@@ -143,6 +143,7 @@ function openDatabase() {
   addColumnIfMissing('booster_openings','is_free','ALTER TABLE booster_openings ADD COLUMN is_free INTEGER NOT NULL DEFAULT 1');
   addColumnIfMissing('card_instances','recycled_at','ALTER TABLE card_instances ADD COLUMN recycled_at INTEGER');
   addColumnIfMissing('card_instances','is_shiny','ALTER TABLE card_instances ADD COLUMN is_shiny INTEGER NOT NULL DEFAULT 0 CHECK(is_shiny IN (0,1))');
+  database.exec('CREATE INDEX IF NOT EXISTS instances_discovery_idx ON card_instances(card_id, is_shiny)');
   // Seed demo content only on the first launch of a truly empty database.
   // This keeps an intentional catalogue reset empty across server restarts.
   const hasUsers = (database.prepare('SELECT 1 FROM users LIMIT 1').get() as {1:number}|undefined) !== undefined;

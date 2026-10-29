@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { currentUser } from '@/lib/local-auth';
 import { db } from '@/lib/local-db';
 import { compareCardleGuess, type CardleAttributes } from '@/lib/cardle';
+import { COMMUNITY_DISCOVERED_MINIGAME_CARD_PREDICATE } from '@/lib/community-cards';
 
 export const runtime = 'nodejs';
 
@@ -20,7 +21,8 @@ function puzzleDay() {
 function cardById(id: string) {
   return db.prepare(`SELECT c.id,c.name,c.description,c.rarity,c.category,c.booster_eligible,
     c.image_url,s.name AS set_name FROM cards c JOIN card_sets s ON s.id=c.set_id
-    WHERE c.id=? AND c.is_active=1 AND s.is_active=1`).get(id) as PuzzleCard | undefined;
+    WHERE c.id=? AND c.is_active=1 AND s.is_active=1
+      AND ${COMMUNITY_DISCOVERED_MINIGAME_CARD_PREDICATE}`).get(id) as PuzzleCard | undefined;
 }
 
 function getDailyPuzzle(day: string): PuzzleCard | null {
@@ -35,7 +37,9 @@ function getDailyPuzzle(day: string): PuzzleCard | null {
       }
       const pool = db.prepare(`SELECT c.id,c.name,c.description,c.rarity,c.category,c.booster_eligible,
         c.image_url,s.name AS set_name FROM cards c JOIN card_sets s ON s.id=c.set_id
-        WHERE c.is_active=1 AND s.is_active=1 ORDER BY c.id`).all() as PuzzleCard[];
+        WHERE c.is_active=1 AND s.is_active=1
+          AND ${COMMUNITY_DISCOVERED_MINIGAME_CARD_PREDICATE}
+        ORDER BY c.id`).all() as PuzzleCard[];
       if (!pool.length) {
         db.exec('COMMIT');
         return null;
@@ -52,10 +56,14 @@ function getDailyPuzzle(day: string): PuzzleCard | null {
 }
 
 function responseFor(userId: number, day: string, answer: PuzzleCard, awardedNow = false) {
-  const options = db.prepare(`SELECT id,name FROM cards WHERE is_active=1 ORDER BY name COLLATE NOCASE`).all() as Array<{ id: string; name: string }>;
+  const options = db.prepare(`SELECT c.id,c.name FROM cards c JOIN card_sets s ON s.id=c.set_id
+    WHERE c.is_active=1 AND s.is_active=1 AND ${COMMUNITY_DISCOVERED_MINIGAME_CARD_PREDICATE}
+    ORDER BY c.name COLLATE NOCASE`).all() as Array<{ id: string; name: string }>;
   const guesses = (db.prepare(`SELECT c.id,c.name,c.description,c.rarity,c.category,c.booster_eligible,
     c.image_url,s.name AS set_name FROM cardle_guesses g JOIN cards c ON c.id=g.guess_card_id
-    JOIN card_sets s ON s.id=c.set_id WHERE g.user_id=? AND g.puzzle_day=? ORDER BY g.guess_order`).all(userId, day) as PuzzleCard[])
+    JOIN card_sets s ON s.id=c.set_id WHERE g.user_id=? AND g.puzzle_day=?
+      AND ${COMMUNITY_DISCOVERED_MINIGAME_CARD_PREDICATE}
+    ORDER BY g.guess_order`).all(userId, day) as PuzzleCard[])
     .map((card) => ({ card, feedback: compareCardleGuess(answer, card), won: card.id === answer.id }));
   const solved = guesses.some((guess) => guess.won);
   const claimedReward = db.prepare('SELECT fragments FROM cardle_rewards WHERE user_id=? AND puzzle_day=?').get(userId, day) as { fragments: number } | undefined;
@@ -90,7 +98,7 @@ export async function GET() {
   try {
     const day = puzzleDay();
     const answer = getDailyPuzzle(day);
-    if (!answer) return NextResponse.json({ error: 'Ajoute des cartes actives pour lancer le jeu.' }, { status: 404 });
+    if (!answer) return NextResponse.json({ error: 'Aucune carte normale n’a encore été découverte par la communauté. Ouvre un booster pour lancer le jeu.' }, { status: 404 });
     const state = responseFor(auth.user.id, day, answer);
     if (state.solved && !state.reward) {
       let awardedNow = false;
@@ -123,7 +131,7 @@ export async function POST(request: Request) {
   try {
     const day = puzzleDay();
     const answer = getDailyPuzzle(day);
-    if (!answer) return NextResponse.json({ error: 'Ajoute des cartes actives pour lancer le jeu.' }, { status: 404 });
+    if (!answer) return NextResponse.json({ error: 'Aucune carte normale n’a encore été découverte par la communauté. Ouvre un booster pour lancer le jeu.' }, { status: 404 });
     const guess = cardById(parsed.data.cardId);
     if (!guess) return NextResponse.json({ error: 'Cette carte n’est pas disponible.' }, { status: 404 });
     let awardedNow = false;
@@ -161,7 +169,7 @@ export async function DELETE() {
   try {
     const day = puzzleDay();
     const answer = getDailyPuzzle(day);
-    if (!answer) return NextResponse.json({ error: 'Ajoute des cartes actives pour lancer le jeu.' }, { status: 404 });
+    if (!answer) return NextResponse.json({ error: 'Aucune carte normale n’a encore été découverte par la communauté. Ouvre un booster pour lancer le jeu.' }, { status: 404 });
     db.exec('BEGIN IMMEDIATE');
     try {
       db.prepare('DELETE FROM cardle_guesses WHERE user_id=? AND puzzle_day=?').run(auth.user.id, day);

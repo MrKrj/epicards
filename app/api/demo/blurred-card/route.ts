@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { currentUser } from '@/lib/local-auth';
 import { db } from '@/lib/local-db';
+import { COMMUNITY_DISCOVERED_MINIGAME_CARD_PREDICATE } from '@/lib/community-cards';
 
 export const runtime = 'nodejs';
 
@@ -27,7 +28,8 @@ function puzzleDay() {
 function cardById(id: string) {
   return db.prepare(`SELECT c.id,c.name,c.description,c.rarity,c.category,c.image_url,
     s.name AS set_name FROM cards c JOIN card_sets s ON s.id=c.set_id
-    WHERE c.id=? AND c.is_active=1 AND s.is_active=1`).get(id) as PuzzleCard | undefined;
+    WHERE c.id=? AND c.is_active=1 AND s.is_active=1
+      AND ${COMMUNITY_DISCOVERED_MINIGAME_CARD_PREDICATE}`).get(id) as PuzzleCard | undefined;
 }
 
 function getDailyPuzzle(day: string) {
@@ -44,6 +46,7 @@ function getDailyPuzzle(day: string) {
       const pool = db.prepare(`SELECT c.id,c.name,c.description,c.rarity,c.category,c.image_url,
         s.name AS set_name FROM cards c JOIN card_sets s ON s.id=c.set_id
         WHERE c.is_active=1 AND s.is_active=1 AND c.image_url IS NOT NULL AND trim(c.image_url)<>''
+          AND ${COMMUNITY_DISCOVERED_MINIGAME_CARD_PREDICATE}
         ORDER BY c.id`).all() as PuzzleCard[];
       if (!pool.length) {
         db.exec('COMMIT');
@@ -63,10 +66,14 @@ function getDailyPuzzle(day: string) {
 }
 
 function responseFor(userId: number, day: string, answer: PuzzleCard, focusX: number, focusY: number, awardedNow = false) {
-  const options = db.prepare(`SELECT id,name FROM cards WHERE is_active=1 ORDER BY name COLLATE NOCASE`).all() as
+  const options = db.prepare(`SELECT c.id,c.name FROM cards c JOIN card_sets s ON s.id=c.set_id
+    WHERE c.is_active=1 AND s.is_active=1 AND ${COMMUNITY_DISCOVERED_MINIGAME_CARD_PREDICATE}
+    ORDER BY c.name COLLATE NOCASE`).all() as
     Array<{ id: string; name: string }>;
   const guesses = db.prepare(`SELECT c.id,c.name FROM blurred_card_guesses g JOIN cards c ON c.id=g.guess_card_id
-    WHERE g.user_id=? AND g.puzzle_day=? ORDER BY g.guess_order`).all(userId, day) as Array<{ id: string; name: string }>;
+    JOIN card_sets s ON s.id=c.set_id WHERE g.user_id=? AND g.puzzle_day=?
+      AND ${COMMUNITY_DISCOVERED_MINIGAME_CARD_PREDICATE}
+    ORDER BY g.guess_order`).all(userId, day) as Array<{ id: string; name: string }>;
   const solved = guesses.some((guess) => guess.id === answer.id);
   const wrongCount = guesses.filter((guess) => guess.id !== answer.id).length;
   const claimedReward = db.prepare('SELECT fragments FROM blurred_card_rewards WHERE user_id=? AND puzzle_day=?').get(userId, day) as { fragments: number } | undefined;
@@ -110,7 +117,7 @@ export async function GET() {
   try {
     const day = puzzleDay();
     const puzzle = getDailyPuzzle(day);
-    if (!puzzle) return NextResponse.json({ error: 'Ajoute des cartes actives avec une illustration pour lancer le jeu.' }, { status: 404 });
+    if (!puzzle) return NextResponse.json({ error: 'Aucune carte illustrée et normale n’a encore été découverte par la communauté. Ouvre un booster pour lancer le jeu.' }, { status: 404 });
     const state = responseFor(auth.user.id, day, puzzle.answer, puzzle.focusX, puzzle.focusY);
     if (state.solved && !state.reward) {
       let awardedNow = false;
@@ -142,7 +149,7 @@ export async function POST(request: Request) {
   try {
     const day = puzzleDay();
     const puzzle = getDailyPuzzle(day);
-    if (!puzzle) return NextResponse.json({ error: 'Ajoute des cartes actives avec une illustration pour lancer le jeu.' }, { status: 404 });
+    if (!puzzle) return NextResponse.json({ error: 'Aucune carte illustrée et normale n’a encore été découverte par la communauté. Ouvre un booster pour lancer le jeu.' }, { status: 404 });
     const guess = cardById(parsed.data.cardId);
     if (!guess) return NextResponse.json({ error: 'Cette carte n’est pas disponible.' }, { status: 404 });
     let awardedNow = false;
@@ -182,7 +189,7 @@ export async function DELETE() {
   try {
     const day = puzzleDay();
     const puzzle = getDailyPuzzle(day);
-    if (!puzzle) return NextResponse.json({ error: 'Ajoute des cartes actives avec une illustration pour lancer le jeu.' }, { status: 404 });
+    if (!puzzle) return NextResponse.json({ error: 'Aucune carte illustrée et normale n’a encore été découverte par la communauté. Ouvre un booster pour lancer le jeu.' }, { status: 404 });
     db.exec('BEGIN IMMEDIATE');
     try {
       db.prepare('DELETE FROM blurred_card_guesses WHERE user_id=? AND puzzle_day=?').run(auth.user.id, day);
