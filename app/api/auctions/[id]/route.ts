@@ -5,6 +5,28 @@ import { settleExpiredAuctions } from '@/lib/auctions';
 
 export const runtime = 'nodejs';
 
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!await currentUser()) return NextResponse.json({ error: 'Connexion requise.' }, { status: 401 });
+  const { id } = await params;
+  try {
+    const now = Date.now();
+    if (db.prepare("SELECT 1 FROM auction_listings WHERE id=? AND status='active' AND ends_at<=?").get(id, now)) {
+      settleExpiredAuctions(now);
+    }
+    const auction = db.prepare('SELECT id FROM auction_listings WHERE id=?').get(id);
+    if (!auction) return NextResponse.json({ error: 'Enchère introuvable.' }, { status: 404 });
+    const bids = db.prepare(`SELECT b.amount,b.created_at,u.username
+      FROM auction_bids b JOIN users u ON u.id=b.bidder_id
+      WHERE b.auction_id=?
+      ORDER BY b.created_at DESC,b.id DESC LIMIT 10`).all(id) as
+      Array<{ amount: number; created_at: number; username: string }>;
+    return NextResponse.json({ bids }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: 'Impossible de charger l’historique des enchères.' }, { status: 500 });
+  }
+}
+
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Connexion requise.' }, { status: 401 });

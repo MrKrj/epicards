@@ -20,7 +20,8 @@ export async function GET() {
       COUNT(DISTINCT CASE WHEN c.rarity='Épique' THEN c.id END) AS epic_cards,
       COUNT(DISTINCT CASE WHEN c.rarity='Rare' THEN c.id END) AS rare_cards,
       COUNT(DISTINCT CASE WHEN c.rarity='Peu commune' THEN c.id END) AS uncommon_cards,
-      COUNT(DISTINCT CASE WHEN c.rarity='Commune' THEN c.id END) AS common_cards
+      COUNT(DISTINCT CASE WHEN c.rarity='Commune' THEN c.id END) AS common_cards,
+      COUNT(DISTINCT CASE WHEN ci.is_shiny=1 THEN c.id END) AS shiny_cards
     FROM users u
     CROSS JOIN catalogue
     LEFT JOIN card_instances ci ON ci.owner_id=u.id AND ci.recycled_at IS NULL

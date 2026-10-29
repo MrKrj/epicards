@@ -346,6 +346,37 @@
 
 /* Light theme contrast fix for the completion percentage shown on the podium. */
 .app-shell[data-theme="light"] .podium-completion{color:#111827}
+.podium-rarities{max-width:100%;color:#9da5b5;font:6.5px/1.55 var(--mono);letter-spacing:-.025em;white-space:normal;overflow-wrap:anywhere}
+.app-shell[data-theme="light"] .podium-rarities{color:#596273}
+.player-card-groups{display:flex;max-height:min(54vh,480px);flex-direction:column;gap:14px;overflow:auto;padding:2px}
+.player-card-group{--player-rarity:var(--rarity-common);padding-bottom:13px;border-bottom:1px solid var(--border)}
+.player-card-group:last-child{padding-bottom:0;border-bottom:0}
+.player-card-group.uncommon{--player-rarity:var(--rarity-uncommon)}
+.player-card-group.rare{--player-rarity:var(--rarity-rare)}
+.player-card-group.epic{--player-rarity:var(--rarity-epic)}
+.player-card-group.legendary{--player-rarity:var(--rarity-legendary)}
+.player-card-group.secret{--player-rarity:var(--rarity-secret)}
+.player-card-group>h3{margin:0 0 8px;color:var(--player-rarity);font:9px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.player-mini-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px}
+.player-mini-card{display:flex;min-width:0;flex-direction:column;gap:5px;padding:5px;background:color-mix(in srgb,var(--player-rarity) 7%,#17181c);border:1px solid color-mix(in srgb,var(--player-rarity) 24%,transparent);border-radius:9px;text-align:left;transition:transform .18s,border-color .18s,background .18s}
+.player-mini-card.uncommon{--player-rarity:var(--rarity-uncommon)}
+.player-mini-card.rare{--player-rarity:var(--rarity-rare)}
+.player-mini-card.epic{--player-rarity:var(--rarity-epic)}
+.player-mini-card.legendary{--player-rarity:var(--rarity-legendary)}
+.player-mini-card.secret{--player-rarity:var(--rarity-secret)}
+.player-mini-card:hover,.player-mini-card:focus-visible{transform:translateY(-2px);border-color:var(--player-rarity);background:color-mix(in srgb,var(--player-rarity) 14%,#17181c);outline:none}
+.player-mini-card-art{position:relative;display:grid;width:100%;aspect-ratio:.72;place-items:center;overflow:hidden;background:color-mix(in srgb,var(--player-rarity) 16%,#101116);border-radius:6px;color:var(--player-rarity);font-size:24px}
+.player-mini-card-art>img{width:100%;height:100%;object-fit:cover}
+.player-mini-card-art>i{position:absolute;right:4px;bottom:4px;padding:3px 4px;background:#101116e8;border:1px solid #d9e2f180;border-radius:5px;color:#eef4ff;font:7px var(--mono);font-style:normal}
+.player-mini-card>strong{display:-webkit-box;min-height:25px;overflow:hidden;color:var(--player-rarity);font-size:9px;line-height:1.35;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.player-mini-card>small{overflow:hidden;color:#8e96a7;font-size:7px;text-overflow:ellipsis;white-space:nowrap}
+.app-shell[data-theme="light"] .player-mini-card{background:color-mix(in srgb,var(--player-rarity) 9%,white)}
+.app-shell[data-theme="light"] .player-mini-card:hover,.app-shell[data-theme="light"] .player-mini-card:focus-visible{background:color-mix(in srgb,var(--player-rarity) 16%,white)}
+.app-shell[data-theme="light"] .player-mini-card>small{color:#596273}
+@media(max-width:700px){.podium-rarities{font-size:5.5px;letter-spacing:-.04em}.ranking-rarities{font-size:6.5px}.player-mini-card-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}}
+.podium-rarities{font-size:8px;letter-spacing:-.02em}
+.ranking-rarities{font-size:9px}
+@media(max-width:700px){.podium-rarities{font-size:7px;letter-spacing:-.03em}.ranking-rarities{font-size:8px}}
 
 
 
@@ -945,3 +976,25 @@
 @media(prefers-reduced-motion:reduce){.cardle-panel::before,.cardle-panel::after,.cardle-date,.cardle-date::after,.cardle-intro,.blurred-game-intro,.blurred-card-frame,.blurred-card-frame::before,.blurred-side-info,.blurred-guess-list>div,.blurred-celebration,.blurred-celebration .cardle-found-card,.blurred-side-info .eyebrow::before{animation:none!important}.minigame-tabs button,.cardle-search,.cardle-reset-row,.blurred-puzzle-layout,.blurred-guess-list>div{transition:none!important}}
 .undiscovered-catalogue-message{width:100%;aspect-ratio:.72;min-height:0;padding:16px;display:grid;place-items:center;text-align:center;color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:.045em;line-height:1.6}
 .app-shell[data-theme="light"] .undiscovered-catalogue-message{color:#687386}
+.auction-owner-actions{display:flex;flex-direction:column;gap:7px}
+.auction-owner-actions .auction-cancel-button,.auction-owner-actions .auction-history-button{width:100%;justify-content:center}
+.auction-history-button{min-height:34px;padding:8px 12px;font-size:9px}
+.auction-bid-history{margin:16px 0 18px;padding:14px;background:#141414;border:1px solid #343434}
+.auction-bid-history-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.auction-bid-history-heading h3{margin:0;color:#eee;font-size:13px}
+.auction-bid-history-heading span{color:#999;font:9px var(--mono);letter-spacing:.08em}
+.auction-bid-history ol{display:grid;gap:6px;max-height:196px;overflow:auto;margin:0;padding:0;list-style:none}
+.auction-bid-history li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 10px;background:#1c1c1c;border:1px solid #303030}
+.auction-bid-person{display:grid;gap:3px;min-width:0}
+.auction-bid-person strong{overflow:hidden;color:#eee;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.auction-bid-person time{color:#999;font:9px var(--mono)}
+.auction-bid-history li>b{flex:none;color:#dce6ff;font:10px var(--mono);text-align:right}
+.auction-history-empty,.auction-history-error,.auction-history-note{margin:8px 0;color:#aaa;font-size:10px;line-height:1.5}
+.auction-history-error{color:#ff8378}
+.auction-detail-modal{width:min(480px,100%)}
+.app-shell[data-theme="light"] .auction-bid-history{background:#f4f6fa;border-color:#d7dce6}
+.app-shell[data-theme="light"] .auction-bid-history-heading h3,.app-shell[data-theme="light"] .auction-bid-person strong{color:#18202d}
+.app-shell[data-theme="light"] .auction-bid-history li{background:#fff;border-color:#dfe3eb}
+.app-shell[data-theme="light"] .auction-bid-history li>b{color:#243c79}
+.app-shell[data-theme="light"] .auction-bid-person time,.app-shell[data-theme="light"] .auction-history-empty,.app-shell[data-theme="light"] .auction-history-note{color:#596273}
+@media(max-width:560px){.auction-bid-history{margin:12px 0;padding:11px}.auction-bid-history li{align-items:flex-start;gap:8px;padding:8px}.auction-bid-history li>b{font-size:9px}}

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { currentUser } from '@/lib/local-auth';
 import { db } from '@/lib/local-db';
 import { settleExpiredAuctionsInTransaction } from '@/lib/auctions';
+import { extendAuctionEndIfNeeded } from '@/lib/auction-timing';
 
 export const runtime = 'nodejs';
 const bidSchema = z.object({ amount: z.number().int().min(1).max(1_000_000) });
@@ -38,6 +39,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (auction.seller_id === user.id) { db.exec('ROLLBACK'); return NextResponse.json({ error: 'Tu ne peux pas enchérir sur ta propre carte.' }, { status: 400 }); }
     if (auction.highest_bidder_id === user.id) { db.exec('ROLLBACK'); return NextResponse.json({ error: 'Tu es déjà le dernier enchérisseur sur cette carte.' }, { status: 409 }); }
     const { amount } = parsed.data;
+    const extendedEndsAt = extendAuctionEndIfNeeded(auction.ends_at, now);
     const minimumIncrement = Math.max(1, Math.ceil(auction.start_price * 0.1));
     const minimum = auction.highest_bidder_id === null ? auction.start_price : auction.current_bid + minimumIncrement;
     if (amount < minimum) { db.exec('ROLLBACK'); return NextResponse.json({ error: `L’enchère minimale est de ${minimum} fragments.` }, { status: 400 }); }
@@ -60,10 +62,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       VALUES(?,?,?,?,?,?)`).run(user.id, -amount, newBalance, 'Mise en enchère', id, now);
     db.prepare('INSERT INTO auction_bids(id,auction_id,bidder_id,amount,created_at) VALUES(?,?,?,?,?)')
       .run(randomUUID(), id, user.id, amount, now);
-    db.prepare(`UPDATE auction_listings SET current_bid=?,highest_bidder_id=?
-      WHERE id=? AND status='active' AND ends_at>?`).run(amount, user.id, id, now);
+    db.prepare(`UPDATE auction_listings SET current_bid=?,highest_bidder_id=?,ends_at=?
+      WHERE id=? AND status='active' AND ends_at>?`).run(amount, user.id, extendedEndsAt, id, now);
     db.exec('COMMIT');
-    return NextResponse.json({ ok: true, amount, balance: newBalance });
+    return NextResponse.json({ ok: true, amount, balance: newBalance, ends_at: extendedEndsAt });
   } catch (error) {
     try { db.exec('ROLLBACK'); } catch {}
     console.error(error);
