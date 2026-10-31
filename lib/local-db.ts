@@ -1,8 +1,10 @@
 import { randomBytes, randomInt, scryptSync, createHash, timingSafeEqual } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import demoCards from '../data/cards.json';
+import { COMBAT_ROLES, combatProfileKey, deriveCombatProfile, randomCombatProfile, type CombatProfile } from './combat-profiles';
+import { migrateCombatProfileRoles } from './combat-profile-migration';
 
 export type LocalUser = { id: number; username: string; role: string; points: number; created_at: number };
 export const PACK_LIMIT = 10;
@@ -12,8 +14,9 @@ export const DROP_WEIGHTS: ReadonlyArray<readonly [string, number]> = [['Commune
 declare global { var cardverseLocalDb: DatabaseSync | undefined; }
 function openDatabase() {
   const dir = join(process.cwd(), 'data');
-  mkdirSync(dir, { recursive: true });
-  const database = new DatabaseSync(join(dir, 'cardverse.sqlite'));
+  const databasePath = process.env.CARDVERSE_DB_PATH?.trim() ? resolve(process.env.CARDVERSE_DB_PATH.trim()) : join(dir, 'cardverse.sqlite');
+  mkdirSync(dirname(databasePath), { recursive: true });
+  const database = new DatabaseSync(databasePath);
   database.exec('PRAGMA busy_timeout=15000; PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL;');
   database.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -286,6 +289,83 @@ if (!currentCardSetColumns.some((column) => column.name === 'color')) {
   db.exec("ALTER TABLE card_sets ADD COLUMN color TEXT NOT NULL DEFAULT '#013afb'");
 }
 db.prepare("UPDATE card_sets SET color='#7144cc' WHERE lower(name) LIKE '%somnolence%' AND color='#013afb'").run();
+// Campus combat matches are additive; they do not mutate card inventories.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS combat_matches (
+    id TEXT PRIMARY KEY,
+    mode TEXT NOT NULL CHECK(mode IN ('ai','pvp')),
+    status TEXT NOT NULL CHECK(status IN ('waiting','active','finished','declined','cancelled')),
+    player1_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    player2_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    player1_deck TEXT NOT NULL,
+    player2_deck TEXT,
+    state_json TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    finished_at INTEGER
+  );
+  CREATE INDEX IF NOT EXISTS combat_matches_player1_idx ON combat_matches(player1_id,status,updated_at DESC);
+  CREATE INDEX IF NOT EXISTS combat_matches_player2_idx ON combat_matches(player2_id,status,updated_at DESC);
+  CREATE TABLE IF NOT EXISTS combat_decks (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    cards_json TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    UNIQUE(user_id,name)
+  );
+  CREATE INDEX IF NOT EXISTS combat_decks_user_idx ON combat_decks(user_id,updated_at DESC);
+`);
+
+// Additive, catalog-level combat identity. Existing card records receive a
+// stable generated profile; new admin-created cards receive a cryptographic
+// random profile in createCombatProfileForNewCard().
+db.exec(`
+  CREATE TABLE IF NOT EXISTS card_combat_profiles (
+    card_id TEXT PRIMARY KEY REFERENCES cards(id) ON DELETE CASCADE,
+    role_id TEXT NOT NULL CHECK(role_id IN (${COMBAT_ROLES.map(role => `'${role.id}'`).join(',')})),
+    power INTEGER NOT NULL CHECK(power BETWEEN 1 AND 10),
+    stability INTEGER NOT NULL CHECK(stability BETWEEN 1 AND 10),
+    expertise INTEGER NOT NULL CHECK(expertise BETWEEN 1 AND 10),
+    created_at INTEGER NOT NULL,
+    UNIQUE(role_id,power,stability,expertise)
+  );
+`);
+migrateCombatProfileRoles(db);
+
+export function createCombatProfileForNewCard(cardId: string): CombatProfile {
+  const existing = db.prepare('SELECT role_id,power,stability,expertise FROM card_combat_profiles WHERE card_id=?').get(cardId) as {role_id:CombatProfile['role'];power:number;stability:number;expertise:number}|undefined;
+  if (existing) return { role:existing.role_id,power:existing.power,stability:existing.stability,expertise:existing.expertise };
+  const used = db.prepare('SELECT 1 FROM card_combat_profiles WHERE role_id=? AND power=? AND stability=? AND expertise=?');
+  const insert = db.prepare('INSERT INTO card_combat_profiles(card_id,role_id,power,stability,expertise,created_at) VALUES(?,?,?,?,?,?)');
+  for (let attempt=0; attempt<20_000; attempt+=1) {
+    const profile = randomCombatProfile(randomInt);
+    if (used.get(profile.role,profile.power,profile.stability,profile.expertise)) continue;
+    insert.run(cardId,profile.role,profile.power,profile.stability,profile.expertise,Date.now());
+    return profile;
+  }
+  throw new Error('Aucun profil de combat libre.');
+}
+
+db.exec('BEGIN IMMEDIATE');
+try {
+  const profileBackfillRows = db.prepare(`SELECT c.id FROM cards c LEFT JOIN card_combat_profiles p ON p.card_id=c.id WHERE p.card_id IS NULL ORDER BY c.id`).all() as Array<{id:string}>;
+  const existingProfileRows = db.prepare('SELECT role_id,power,stability,expertise FROM card_combat_profiles').all() as Array<{role_id:CombatProfile['role'];power:number;stability:number;expertise:number}>;
+  const existingProfileKeys = new Set(existingProfileRows.map(profile => combatProfileKey({role:profile.role_id,power:profile.power,stability:profile.stability,expertise:profile.expertise})));
+  const addBackfilledProfile = db.prepare('INSERT INTO card_combat_profiles(card_id,role_id,power,stability,expertise,created_at) VALUES(?,?,?,?,?,?)');
+  for (const card of profileBackfillRows) {
+    let salt = 0;
+    let profile: CombatProfile;
+    do { profile = deriveCombatProfile(card.id,salt++); } while (existingProfileKeys.has(combatProfileKey(profile)));
+    addBackfilledProfile.run(card.id,profile.role,profile.power,profile.stability,profile.expertise,Date.now());
+    existingProfileKeys.add(combatProfileKey(profile));
+  }
+  db.exec('COMMIT');
+} catch (error) {
+  try { db.exec('ROLLBACK'); } catch {}
+  throw error;
+}
 export const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 export function newSession(userId: number) {
   const token = randomBytes(32).toString('base64url');
