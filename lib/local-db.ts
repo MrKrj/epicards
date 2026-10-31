@@ -12,6 +12,7 @@ export const PACK_WINDOW_MS = 60 * 60 * 1000;
 export const DROP_WEIGHTS: ReadonlyArray<readonly [string, number]> = [['Commune',60],['Peu commune',30],['Rare',7],['Épique',2.5],['Légendaire',0.4],['Secrète',0.1]];
 
 declare global { var cardverseLocalDb: DatabaseSync | undefined; }
+let moduleDatabaseInitialized = false;
 function openDatabase() {
   const dir = join(process.cwd(), 'data');
   const databasePath = process.env.CARDVERSE_DB_PATH?.trim() ? resolve(process.env.CARDVERSE_DB_PATH.trim()) : join(dir, 'cardverse.sqlite');
@@ -165,8 +166,9 @@ function openDatabase() {
   return database;
 }
 function slug(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
-export const db = globalThis.cardverseLocalDb ?? (globalThis.cardverseLocalDb = openDatabase());
-// Migrate the former rarity label without changing users' existing card copies.
+function initializeDatabase(database: DatabaseSync) {
+  const db = database;
+  // Migrate the former rarity label without changing users' existing card copies.
 db.prepare("UPDATE cards SET rarity='Secrète' WHERE rarity='Exclusive'").run();
 // Additive auction migration. This runs outside openDatabase so the persistent
 // SQLite singleton also receives new tables during Next.js development HMR.
@@ -333,22 +335,7 @@ db.exec(`
   );
 `);
 migrateCombatProfileRoles(db);
-
-export function createCombatProfileForNewCard(cardId: string): CombatProfile {
-  const existing = db.prepare('SELECT role_id,power,stability,expertise FROM card_combat_profiles WHERE card_id=?').get(cardId) as {role_id:CombatProfile['role'];power:number;stability:number;expertise:number}|undefined;
-  if (existing) return { role:existing.role_id,power:existing.power,stability:existing.stability,expertise:existing.expertise };
-  const used = db.prepare('SELECT 1 FROM card_combat_profiles WHERE role_id=? AND power=? AND stability=? AND expertise=?');
-  const insert = db.prepare('INSERT INTO card_combat_profiles(card_id,role_id,power,stability,expertise,created_at) VALUES(?,?,?,?,?,?)');
-  for (let attempt=0; attempt<20_000; attempt+=1) {
-    const profile = randomCombatProfile(randomInt);
-    if (used.get(profile.role,profile.power,profile.stability,profile.expertise)) continue;
-    insert.run(cardId,profile.role,profile.power,profile.stability,profile.expertise,Date.now());
-    return profile;
-  }
-  throw new Error('Aucun profil de combat libre.');
-}
-
-db.exec('BEGIN IMMEDIATE');
+  db.exec('BEGIN IMMEDIATE');
 try {
   const profileBackfillRows = db.prepare(`SELECT c.id FROM cards c LEFT JOIN card_combat_profiles p ON p.card_id=c.id WHERE p.card_id IS NULL ORDER BY c.id`).all() as Array<{id:string}>;
   const existingProfileRows = db.prepare('SELECT role_id,power,stability,expertise FROM card_combat_profiles').all() as Array<{role_id:CombatProfile['role'];power:number;stability:number;expertise:number}>;
@@ -365,6 +352,48 @@ try {
 } catch (error) {
   try { db.exec('ROLLBACK'); } catch {}
   throw error;
+}
+}
+
+function getDatabase() {
+  let database = globalThis.cardverseLocalDb;
+  const isNewConnection = !database;
+  if (!database) {
+    database = openDatabase();
+  }
+  if (!moduleDatabaseInitialized) {
+    try {
+      initializeDatabase(database);
+    } catch (error) {
+      if (isNewConnection) database.close();
+      throw error;
+    }
+    moduleDatabaseInitialized = true;
+  }
+  if (isNewConnection) globalThis.cardverseLocalDb = database;
+  return database;
+}
+
+export const db = new Proxy({} as DatabaseSync, {
+  get(_target, property) {
+    const database = getDatabase();
+    const value = Reflect.get(database, property, database);
+    return typeof value === 'function' ? value.bind(database) : value;
+  },
+});
+
+export function createCombatProfileForNewCard(cardId: string): CombatProfile {
+  const existing = db.prepare('SELECT role_id,power,stability,expertise FROM card_combat_profiles WHERE card_id=?').get(cardId) as {role_id:CombatProfile['role'];power:number;stability:number;expertise:number}|undefined;
+  if (existing) return { role:existing.role_id,power:existing.power,stability:existing.stability,expertise:existing.expertise };
+  const used = db.prepare('SELECT 1 FROM card_combat_profiles WHERE role_id=? AND power=? AND stability=? AND expertise=?');
+  const insert = db.prepare('INSERT INTO card_combat_profiles(card_id,role_id,power,stability,expertise,created_at) VALUES(?,?,?,?,?,?)');
+  for (let attempt=0; attempt<20_000; attempt+=1) {
+    const profile = randomCombatProfile(randomInt);
+    if (used.get(profile.role,profile.power,profile.stability,profile.expertise)) continue;
+    insert.run(cardId,profile.role,profile.power,profile.stability,profile.expertise,Date.now());
+    return profile;
+  }
+  throw new Error('Aucun profil de combat libre.');
 }
 export const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 export function newSession(userId: number) {
