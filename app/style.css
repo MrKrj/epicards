@@ -1827,26 +1827,37 @@ html::-webkit-scrollbar,body::-webkit-scrollbar,.app-shell::-webkit-scrollbar,.a
 @media(max-width:920px){.card-detail-backdrop{place-items:start center;padding:12px;overflow:auto}.card-detail-layout,.card-detail-layout.has-combat-info{width:min(500px,100%);max-height:none;flex-direction:column;align-items:center;gap:10px;margin:auto}.card-detail-layout>.card-detail-modal{flex:none;max-height:none;overflow:visible}.card-detail-layout>.card-combat-info{position:relative!important;inset:auto!important;flex:none;width:min(500px,100%)!important;max-height:320px;align-self:stretch}}
 
 /* Network latency should read as a live disruption on the affected lane. */
-.combat-lane.weather-hit-fog{isolation:isolate;border-color:#55dfffc2;background:linear-gradient(90deg,#19d4f22b,#1b9acb1a 48%,#628dff25);box-shadow:inset 0 0 38px #2bcbef38,0 0 22px #30c9ed35;animation:combat-latency-pulse 1.8s ease-in-out infinite alternate}
+.combat-lane.weather-hit-fog{isolation:isolate;border-color:#55dfff75;background:linear-gradient(90deg,#19d4f218,#1b9acb10 48%,#628dff14);box-shadow:inset 0 0 24px #2bcbef1c,0 0 12px #30c9ed1a;animation:combat-latency-pulse 2.4s ease-in-out infinite alternate}
 .combat-lane.weather-hit-fog::before,.combat-lane.weather-hit-fog::after{position:absolute;inset:0;z-index:2;content:"";pointer-events:none;border-radius:inherit}
-.combat-lane.weather-hit-fog::before{background:repeating-linear-gradient(90deg,transparent 0 37px,#73e9ff24 38px 40px),repeating-linear-gradient(0deg,transparent 0 13px,#b9f5ff12 14px 15px);opacity:.6;animation:combat-network-scan 1.25s linear infinite}
-.combat-lane.weather-hit-fog::after{inset:10px auto 10px -35%;width:28%;border-radius:5px;background:linear-gradient(90deg,transparent,#6beaff35,#dbfbffb8,#65cfff4c,transparent);filter:blur(2px);animation:combat-network-sweep 2.25s ease-in-out infinite}
-.combat-lane.weather-hit-fog>.combat-weather-fx{z-index:1;opacity:.95}
+.combat-lane.weather-hit-fog::before{background:repeating-linear-gradient(90deg,transparent 0 37px,#73e9ff18 38px 40px),repeating-linear-gradient(0deg,transparent 0 13px,#b9f5ff0c 14px 15px);opacity:.34;animation:combat-network-scan 1.8s linear infinite}
+.combat-lane.weather-hit-fog::after{inset:10px auto 10px -35%;width:28%;border-radius:5px;background:linear-gradient(90deg,transparent,#6beaff20,#dbfbff75,#65cfff2e,transparent);filter:blur(2px);animation:combat-network-sweep 3s ease-in-out infinite}
+.combat-lane.weather-hit-fog>.combat-weather-fx{z-index:1;opacity:.62}
 .combat-lane.weather-hit-fog>.combat-row-side,.combat-lane.weather-hit-fog>.combat-lane-marker{position:relative;z-index:3}
-.combat-lane.weather-hit-fog>.combat-lane-marker>span,.combat-lane.weather-hit-fog>.combat-lane-marker>b{color:#70e7ff;text-shadow:0 0 9px #56dfffaa}
-.combat-lane.weather-hit-fog>.combat-lane-marker>small i{box-shadow:0 0 9px #47dfff35}
+.combat-lane.weather-hit-fog>.combat-lane-marker>span,.combat-lane.weather-hit-fog>.combat-lane-marker>b{color:#83dced;text-shadow:0 0 5px #56dfff55}
+.combat-lane.weather-hit-fog>.combat-lane-marker>small i{box-shadow:0 0 5px #47dfff20}
 .combat-lane.weather-hit-fog>.combat-lane-target{z-index:4}
-.combat-weather-announcement.weather-fog{border-color:#53d6ee8c;background:linear-gradient(105deg,#13cde521,#2a9ccc12 55%,#ffffff05);box-shadow:inset 0 1px #d3fbff12,0 0 20px #31c8e32b}
-.combat-weather-announcement.weather-fog .combat-weather-announcement-icon{color:#75eaff;border-color:#55dfffa1;background:#27c7e72a;box-shadow:0 0 18px #48dfff48;animation:combat-latency-icon 1.5s ease-in-out infinite}
-.combat-weather-announcement.weather-fog>strong{border-color:#55dfffa1;background:#25c1df19;color:#91efff}
+.combat-weather-announcement.weather-fog{border-color:#53d6ee5c;background:linear-gradient(105deg,#13cde512,#2a9ccc09 55%,#ffffff03);box-shadow:inset 0 1px #d3fbff0b,0 0 10px #31c8e316}
+.combat-weather-announcement.weather-fog .combat-weather-announcement-icon{color:#91dbe9;border-color:#55dfff70;background:#27c7e716;box-shadow:0 0 9px #48dfff24;animation:combat-latency-icon 2s ease-in-out infinite}
+.combat-weather-announcement.weather-fog>strong{border-color:#55dfff70;background:#25c1df0d;color:#a4e4ee}
 .weather-fx-fog .combat-weather-clouds{top:18%;height:64%;background:radial-gradient(ellipse,#56dff02b,transparent 68%);filter:blur(17px);animation-duration:3.8s}
-.weather-fx-fog .combat-weather-particles i{top:var(--weather-top);width:clamp(26px,5vw,66px);height:3px;border-radius:999px;background:linear-gradient(90deg,transparent,#43d7ff,#d8fbff 52%,#5d9dff 78%,transparent);box-shadow:0 0 8px #47dfffbd;filter:drop-shadow(0 0 4px #63deff);opacity:.86;animation-name:combat-network-packet}
-@keyframes combat-latency-pulse{from{filter:brightness(.93)}to{filter:brightness(1.22)}}
+.weather-fx-fog .combat-weather-particles i{top:var(--weather-top);width:clamp(26px,5vw,66px);height:2px;border-radius:999px;background:linear-gradient(90deg,transparent,#43d7ffb3,#d8fbffb8 52%,#5d9dff99 78%,transparent);box-shadow:0 0 5px #47dfff70;filter:drop-shadow(0 0 2px #63deff88);opacity:.52;animation-name:combat-network-packet}
+@keyframes combat-latency-pulse{from{filter:brightness(.98)}to{filter:brightness(1.08)}}
 @keyframes combat-network-scan{to{background-position:38px 0,0 15px}}
 @keyframes combat-network-sweep{0%,10%{transform:translateX(0);opacity:0}25%{opacity:1}85%,100%{transform:translateX(520%);opacity:0}}
-@keyframes combat-network-packet{0%{transform:translate3d(0,0,0);opacity:0}20%{opacity:1}75%{opacity:.95}100%{transform:translate3d(var(--weather-drift),0,0);opacity:0}}
-@keyframes combat-latency-icon{50%{filter:brightness(1.45);transform:translateX(2px)}}
+@keyframes combat-network-packet{0%{transform:translate3d(0,0,0);opacity:0}20%{opacity:.68}75%{opacity:.55}100%{transform:translate3d(var(--weather-drift),0,0);opacity:0}}
+@keyframes combat-latency-icon{50%{filter:brightness(1.12);transform:translateX(1px)}}
 @media(prefers-reduced-motion:reduce){.combat-lane.weather-hit-fog,.combat-lane.weather-hit-fog::before,.combat-lane.weather-hit-fog::after,.combat-weather-announcement.weather-fog .combat-weather-announcement-icon,.weather-fx-fog .combat-weather-particles i{animation:none!important}}
+
+/* On touch screens, deck selection is an explicit action inside the card inspector. */
+.combat-deck-mobile-inspector{position:absolute!important;z-index:1!important;pointer-events:auto;touch-action:pan-y}
+.combat-hover-effect-panel.combat-deck-mobile-inspector.is-selected{pointer-events:auto!important}
+.combat-deck-mobile-scrim{position:fixed;inset:0;z-index:2147483647;display:block;background:#03071178;backdrop-filter:blur(2px);pointer-events:auto;touch-action:none}
+.combat-deck-overlay-action{display:flex;width:100%;min-height:44px;align-items:center;justify-content:center;margin-top:5px;padding:10px 14px;border:1px solid #8ca6ff9c;border-radius:10px;background:linear-gradient(115deg,#6687ff,#48bddc);box-shadow:0 7px 20px #557aff38;color:#071126;font-size:13px;font-weight:850;cursor:pointer;touch-action:manipulation}
+.combat-deck-overlay-action:active{transform:scale(.985)}
+.combat-hover-effect-panel.combat-light .combat-deck-overlay-action{border-color:#7189ce;background:linear-gradient(115deg,#dce6ff,#d9f6ff);color:#1b2d56;box-shadow:0 6px 18px #4a68ad24}
+
+/* Center turn/result announcements on the visible mobile viewport. */
+@media(max-width:780px){.combat-turn-announcement{inset:0;width:100vw;height:100vh;height:100dvh;min-height:100dvh;box-sizing:border-box;place-items:center;padding:12px}.combat-turn-announcement-card{margin:0}}
 
 /* Spell out the beta badge in both the desktop and compact navigation. */
 .beta-nav-mark{display:inline-flex;width:auto;min-width:34px;height:18px;align-items:center;justify-content:center;padding:0 5px;border-radius:5px;font-size:7px;letter-spacing:.04em}
@@ -1933,3 +1944,47 @@ html::-webkit-scrollbar,body::-webkit-scrollbar,.app-shell::-webkit-scrollbar,.a
 .combat-fullscreen .combat-result-banner>div strong{font-size:18px;font-weight:850}
 @media(max-width:780px){.combat-fullscreen .combat-result-banner{gap:9px;padding:9px 12px}.combat-fullscreen .combat-result-burst{width:32px;height:32px;border-radius:10px}.combat-fullscreen .combat-result-banner>div strong{font-size:15px}}
 .combat-selected-deck-panel .combat-deck-policy{margin-top:14px}
+
+/* Give the two remaining incidents the same deliberate, readable treatment as latency. */
+.combat-lane.weather-hit-frost,.combat-lane.weather-hit-storm{isolation:isolate}
+.combat-lane.weather-hit-frost{border-color:#77d9ed70;background:linear-gradient(100deg,#32c9e813,#8fe9f00b 48%,#6dbdff12);box-shadow:inset 0 0 22px #65d9ef16,0 0 12px #56d7ed12;animation:combat-frost-breathe 4.8s ease-in-out infinite alternate}
+.combat-lane.weather-hit-storm{border-color:#a08bfa70;background:linear-gradient(100deg,#7662eb18,#6964d20d 48%,#9c82ff16);box-shadow:inset 0 0 24px #8f7cf21a,0 0 14px #8f76ed16;animation:combat-storm-breathe 4.2s ease-in-out infinite alternate}
+.combat-lane.weather-hit-frost::before,.combat-lane.weather-hit-frost::after,.combat-lane.weather-hit-storm::before,.combat-lane.weather-hit-storm::after{position:absolute;inset:0;z-index:2;content:"";border-radius:inherit;pointer-events:none}
+.combat-lane.weather-hit-frost::before{background:repeating-linear-gradient(115deg,transparent 0 27px,#b9f5ff0a 28px 29px),linear-gradient(105deg,transparent 30%,#c9f7ff13 48%,transparent 66%);opacity:.72;animation:combat-frost-sheen 6s ease-in-out infinite}
+.combat-lane.weather-hit-frost::after{inset:10px 0;background:linear-gradient(90deg,transparent 28%,#8beaff12 42%,#e0fbff66 50%,#81dcff19 58%,transparent 72%);background-size:220% 100%;background-position:100% 0;filter:blur(3px);animation:combat-frost-sweep 5.2s ease-in-out infinite}
+.combat-lane.weather-hit-storm::before{background:repeating-linear-gradient(90deg,transparent 0 31px,#c3b7ff0c 32px 33px),repeating-linear-gradient(0deg,transparent 0 17px,#d8d2ff09 18px 19px);opacity:.68;animation:combat-storm-grid 2.7s linear infinite}
+.combat-lane.weather-hit-storm::after{inset:8px 0;background:linear-gradient(90deg,transparent 27%,#9b86ff10 42%,#c5b8ff5c 50%,#7daeff17 58%,transparent 73%);background-size:220% 100%;background-position:100% 0;filter:blur(3px);animation:combat-storm-current 4.4s ease-in-out infinite}
+.combat-lane.weather-hit-frost>.combat-row-side,.combat-lane.weather-hit-frost>.combat-lane-marker,.combat-lane.weather-hit-storm>.combat-row-side,.combat-lane.weather-hit-storm>.combat-lane-marker{position:relative;z-index:3}
+.combat-lane.weather-hit-frost>.combat-weather-fx{z-index:1;opacity:.58}
+.combat-lane.weather-hit-storm>.combat-weather-fx{z-index:1;opacity:.66}
+.combat-lane.weather-hit-frost>.combat-lane-marker>span,.combat-lane.weather-hit-frost>.combat-lane-marker>b{color:#93e3f1;text-shadow:0 0 6px #65d8ed45}
+.combat-lane.weather-hit-storm>.combat-lane-marker>span,.combat-lane.weather-hit-storm>.combat-lane-marker>b{color:#c2b2ff;text-shadow:0 0 7px #9a80ff55}
+.weather-fx-frost .combat-weather-clouds{background:radial-gradient(ellipse,#81e5ff28,transparent 68%);filter:blur(18px);animation-duration:8.5s}
+.weather-fx-frost .combat-weather-particles i{width:4px;height:4px;background:#d9f8ff;box-shadow:0 0 5px #9be7fa;opacity:.72}
+.weather-fx-storm .combat-weather-clouds{background:radial-gradient(ellipse,#8275e33b,transparent 70%);filter:blur(17px);animation-duration:7.2s}
+.weather-fx-storm .combat-weather-particles i{opacity:.64;text-shadow:0 0 6px #65bdff99}
+.weather-fx-storm .combat-weather-particles i span{animation-duration:1.55s}
+.weather-fx-storm .combat-lightning-bolt{filter:drop-shadow(0 0 8px #a99aff);animation:combat-storm-soft-strike 8s linear infinite}
+.weather-fx-storm .combat-lightning-flash{animation:combat-storm-soft-flash 8s linear infinite}
+.combat-weather-announcement.weather-frost{border-color:#83deef58;background:linear-gradient(105deg,#70d8ef16,#ffffff04);box-shadow:inset 0 1px #d3fbff0b,0 0 12px #31c8e30d;animation:combat-frost-banner 4.8s ease-in-out infinite alternate}
+.combat-weather-announcement.weather-frost .combat-weather-announcement-icon{box-shadow:0 0 10px #48dfff20;animation:combat-frost-icon 3.2s ease-in-out infinite}
+.combat-weather-announcement.weather-storm{box-shadow:inset 0 1px #ffffff10,0 0 15px #8d72ff16;animation:combat-storm-banner 4.2s ease-in-out infinite alternate}
+.combat-weather-announcement.weather-storm .combat-weather-announcement-icon{box-shadow:0 0 12px #9b7cff27;animation:combat-storm-icon 2.8s ease-in-out infinite}
+.app-shell[data-theme="light"] .combat-lane.weather-hit-frost{border-color:#69bfd2;background:linear-gradient(100deg,#e1f8fb,#f4fcff 48%,#e8f3ff);box-shadow:inset 0 0 18px #58c7db20,0 0 9px #58c7db12}
+.app-shell[data-theme="light"] .combat-lane.weather-hit-storm{border-color:#9585cc;background:linear-gradient(100deg,#eeeaff,#f8f6ff 48%,#eeedff);box-shadow:inset 0 0 19px #8e7ad51c,0 0 9px #8e7ad514}
+.app-shell[data-theme="light"] .combat-lane.weather-hit-frost::before{background:repeating-linear-gradient(115deg,transparent 0 27px,#3289a80a 28px 29px),linear-gradient(105deg,transparent 30%,#4cb6d21c 48%,transparent 66%)}
+.app-shell[data-theme="light"] .combat-lane.weather-hit-storm::before{background:repeating-linear-gradient(90deg,transparent 0 31px,#7564ad0c 32px 33px),repeating-linear-gradient(0deg,transparent 0 17px,#7564ad09 18px 19px)}
+.app-shell[data-theme="light"] .combat-lane.weather-hit-frost>.combat-lane-marker>span,.app-shell[data-theme="light"] .combat-lane.weather-hit-frost>.combat-lane-marker>b{color:#357c91;text-shadow:none}
+.app-shell[data-theme="light"] .combat-lane.weather-hit-storm>.combat-lane-marker>span,.app-shell[data-theme="light"] .combat-lane.weather-hit-storm>.combat-lane-marker>b{color:#655397;text-shadow:none}
+@keyframes combat-frost-breathe{from{box-shadow:inset 0 0 18px #65d9ef12,0 0 7px #56d7ed0b}to{box-shadow:inset 0 0 25px #65d9ef20,0 0 14px #56d7ed18}}
+@keyframes combat-frost-sheen{0%,100%{background-position:0 0,-80% 0;opacity:.42}50%{background-position:29px 0,80% 0;opacity:.78}}
+@keyframes combat-frost-sweep{0%,12%{background-position:100% 0;opacity:0}30%{opacity:.78}82%,100%{background-position:0 0;opacity:0}}
+@keyframes combat-storm-breathe{from{box-shadow:inset 0 0 19px #8f7cf212,0 0 8px #8f76ed0c}to{box-shadow:inset 0 0 27px #8f7cf225,0 0 16px #8f76ed20}}
+@keyframes combat-storm-grid{to{background-position:31px 0,0 19px}}
+@keyframes combat-storm-current{0%,10%{background-position:100% 0;opacity:0}28%{opacity:.78}82%,100%{background-position:0 0;opacity:0}}
+@keyframes combat-frost-banner{from{box-shadow:inset 0 1px #d3fbff0b,0 0 8px #31c8e308}to{box-shadow:inset 0 1px #d3fbff12,0 0 15px #31c8e31a}}
+@keyframes combat-frost-icon{50%{filter:brightness(1.15);transform:translateY(-1px)}}
+@keyframes combat-storm-icon{0%,100%{filter:brightness(1);transform:translateX(0)}50%{filter:brightness(1.16);transform:translateX(1px)}}
+@keyframes combat-storm-soft-strike{0%,68%,72%,100%{opacity:0}69%{opacity:.58}70%{opacity:.12}71%{opacity:.38}}
+@keyframes combat-storm-soft-flash{0%,68%,70%,72%,100%{opacity:0}69%{opacity:.025}71%{opacity:.012}}
+@media(prefers-reduced-motion:reduce){.combat-lane.weather-hit-frost,.combat-lane.weather-hit-storm,.combat-lane.weather-hit-frost::before,.combat-lane.weather-hit-frost::after,.combat-lane.weather-hit-storm::before,.combat-lane.weather-hit-storm::after,.combat-weather-announcement.weather-frost,.combat-weather-announcement.weather-frost .combat-weather-announcement-icon,.combat-weather-announcement.weather-storm .combat-weather-announcement-icon,.weather-fx-storm .combat-lightning-bolt,.weather-fx-storm .combat-lightning-flash{animation:none!important}}

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { Activity, BookOpen, Bot, Check, CheckCircle2, ChevronLeft, ChevronRight, Circle, Cloud, CloudLightning, Cpu, Crown, Database, Eye, Flame, GitBranch, Layers, LoaderCircle, Search, Shield, Snowflake, Sparkles, Sun, Swords, Target, Trophy, Users, Wind, X, Zap } from 'lucide-react';
 import { COMBAT_ROWS, RARITY_EFFECT, getCombatBasePower, getCombatRarityExplanation, type BoardCard, type CombatCard, type CombatRow, type CombatSide, type CombatWeatherId } from '@/lib/combat-engine';
 import { COMBAT_ROLES, getCombatProfile, getCombatRoleInfo, type CombatRoleId } from '@/lib/combat-profiles';
+import { setCombatDeckSelection } from '@/lib/combat-deck-selection';
 
 type UserLike={id:number;username:string;role?:string}|null;
 type OwnedCard=CombatCard&{quantity:number};
@@ -66,10 +67,10 @@ export function CombatEffectRows({card}:{card:CombatCard}){
   </div>;
 }
 
-function CombatCardEffectOverlay({id,card,theme,style,selected=false,prompt,fieldStatus,onMouseEnter,onMouseLeave}:{id?:string;card:CombatCard;theme:'dark'|'light';style:CSSProperties;selected?:boolean;prompt?:string;fieldStatus?:{tone:'positive'|'negative'|'mixed'|null;bonuses:string[];maluses:string[];notes:string[];power:number};onMouseEnter?:()=>void;onMouseLeave?:()=>void}){
+function CombatCardEffectOverlay({id,card,theme,style,selected=false,prompt,fieldStatus,onMouseEnter,onMouseLeave,mobileDeckAction,onDeckAction}:{id?:string;card:CombatCard;theme:'dark'|'light';style:CSSProperties;selected?:boolean;prompt?:string;fieldStatus?:{tone:'positive'|'negative'|'mixed'|null;bonuses:string[];maluses:string[];notes:string[];power:number};onMouseEnter?:()=>void;onMouseLeave?:()=>void;mobileDeckAction?:boolean;onDeckAction?:(selected:boolean)=>void}){
   const profile=getCombatProfile(card),role=getCombatRoleInfo(profile),StatusIcon=fieldStatus?.tone==='positive'?Zap:fieldStatus?.tone==='negative'?Flame:fieldStatus?.tone==='mixed'?Activity:Circle;
   const statusLabel=fieldStatus?.tone==='mixed'?'BONUS ET MALUS ACTIFS':fieldStatus?.tone==='positive'?'BONUS ACTIFS':fieldStatus?.tone==='negative'?'MALUS ACTIFS':'AUCUN BONUS OU MALUS ACTIF';
-  return <div id={id} className={`combat-hover-effect-panel ${rarityClass[card.rarity]??'common'}${theme==='light'?' combat-light':''}${selected?' is-selected':''}${fieldStatus?' has-field-status':''}`} style={style} role="tooltip" onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+  return <div id={id} className={`combat-hover-effect-panel ${rarityClass[card.rarity]??'common'}${theme==='light'?' combat-light':''}${selected?' is-selected':''}${fieldStatus?' has-field-status':''}${mobileDeckAction?' combat-deck-mobile-inspector':''}`} style={style} role={mobileDeckAction?'dialog':'tooltip'} aria-label={mobileDeckAction?'Effets de la carte':undefined} aria-modal={mobileDeckAction?true:undefined} onClick={event=>{if(mobileDeckAction)event.stopPropagation()}} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
     <div className="combat-hover-effect-content">
       <header className="combat-hover-effect-header"><span><Sparkles size={17}/></span><div><small>{card.category} · {card.setName} · {card.rarity}{card.isShiny?' · SHINY':''}</small><b>{card.name}</b></div></header>
       <CombatEffectRows card={card}/>
@@ -81,6 +82,7 @@ function CombatCardEffectOverlay({id,card,theme,style,selected=false,prompt,fiel
         {!fieldStatus.bonuses.length&&!fieldStatus.maluses.length&&!fieldStatus.notes.length&&<p className="combat-effect-outcome neutral"><Circle size={14}/><span>Aucun bonus ni malus ne modifie cette carte actuellement.</span></p>}
       </section>}
       {prompt&&<small className="combat-overlay-prompt">{prompt}</small>}
+      {mobileDeckAction&&<button type="button" className="combat-deck-overlay-action" onClick={event=>{event.preventDefault();event.stopPropagation();onDeckAction?.(!selected)}}>{selected?'Retirer du deck':'Ajouter au deck'}</button>}
     </div>
   </div>;
 }
@@ -95,7 +97,7 @@ type TurnAnnouncement={kind:'daemon'|'daemon-play'|'your-turn'|'round'|'match';t
 const wait=(milliseconds:number)=>new Promise<void>(resolve=>window.setTimeout(resolve,milliseconds));
 const lobbyTutorial:TutorialStep[]=[
   {label:'LE BUT',title:'Gagner deux manches',body:'Chaque combat se joue en trois manches maximum. Pour gagner une manche, il faut avoir plus de points que l’adversaire sur au moins deux des trois lignes : le total général ne compte pas. Le premier joueur qui remporte deux manches gagne le duel.'},
-  {label:'TON DECK',title:'Choisis 8 à 12 cartes',body:'Clique sur les cartes pour les ajouter à ton deck. Tu peux en prendre plusieurs Communes et Peu communes, mais une seule de chaque rareté à partir de Rare. Les catégories des cartes ne changent pas leurs règles de combat.',selector:'[data-combat-tutorial="deck"]'},
+  {label:'TON DECK',title:'Choisis 8 à 12 cartes',body:'Sur mobile, touche une carte pour lire ses effets, puis utilise le bouton Ajouter au deck dans l’overlay. Sur ordinateur, clique directement sur la carte. Tu peux en prendre plusieurs Communes et Peu communes, mais une seule de chaque rareté à partir de Rare. Les catégories des cartes ne changent pas leurs règles de combat.',selector:'[data-combat-tutorial="deck"]'},
   {label:'PUISSANCE',title:'La puissance de base est déjà calculée',body:'Le chiffre affiché sur la carte intègre son profil automatique. Tu n’as pas à calculer ni à gérer les statistiques séparément ; seuls les effets de rareté, de rôle et de terrain peuvent modifier cette valeur pendant le combat.',selector:'[data-combat-tutorial="cards"]'},
   {label:'LES RARETÉS',title:'Chaque rareté a une règle simple',body:'Commune : aucun bonus. Peu commune : renforce les alliées de son canal. Rare : double ses points avec une alliée de la même série. Épique : va chez l’adversaire, marque pour toi et neutralise un effet technique sur son canal. Légendaire : ignore météo et Secrètes. Secrète : retire la carte adverse la plus forte du canal, sauf une Légendaire. Ouvre « Règles & effets » pour relire les détails.',selector:'[data-combat-tutorial="rules-button"]'},
   {label:'LES EFFETS',title:'Six effets techniques différents',body:'CI/CD renforce ses alliées sur le même canal ; API gagne +2 ; Stack progresse au fil des cartes jouées ; RAM revient une manche à demi-puissance ; Elasticity Cloud soutient la meilleure alliée d’un autre canal ; Unit Test affaiblit la meilleure carte adverse sur son canal. Une Épique peut neutraliser l’un de ces effets pour la manche.',selector:'[data-combat-tutorial="rules-button"]'},
@@ -175,26 +177,33 @@ function CombatRulebookDialog({theme,onClose,initialTopic='cards'}:{theme:'dark'
   return createPortal(<div className="app-shell combat-portal-shell" data-theme={theme}><div className="combat-rulebook-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}><section className="combat-rulebook-dialog" role="dialog" aria-modal="true" aria-labelledby="combat-rulebook-title"><header><div><span className="combat-kicker">MÉMO DE L’ARÈNE</span><h2 id="combat-rulebook-title">{heading}</h2></div><button type="button" onClick={onClose} aria-label="Fermer le rappel des règles"><X size={19}/></button></header><nav className="combat-rulebook-tabs" aria-label="Rubriques des règles">{rulebookTopics.map(({id,label,Icon})=><button key={id} type="button" role="tab" aria-selected={topic===id} className={topic===id?'active':''} onClick={()=>setTopic(id)}><Icon size={14}/>{label}</button>)}</nav><div className="combat-rulebook-scroll"><CombatRulebookContent topic={topic}/></div></section></div></div>,document.body);
 }
 
-function DeckPoolCard({card,chosen,onToggle,theme}:{card:OwnedCard;chosen:boolean;onToggle:()=>void;theme:'dark'|'light'}){
+function DeckPoolCard({card,chosen,onToggle,onMobileDeckAction,theme,mobilePreviewOpen,onMobilePreviewToggle}:{card:OwnedCard;chosen:boolean;onToggle:()=>void;onMobileDeckAction:(selected:boolean)=>void;theme:'dark'|'light';mobilePreviewOpen:boolean;onMobilePreviewToggle:(open:boolean)=>void}){
   const [inspection,setInspection]=useState<{left:number;top:number;width:number}|null>(null);
   const closeTimer=useRef<number|null>(null);
   const role=getCombatRoleInfo(getCombatProfile(card)),rarity=rarityClass[card.rarity]??'common';
+  const isMobileLayout=()=>typeof window!=='undefined'&&window.matchMedia('(max-width: 800px)').matches;
   const showInspection=(element:HTMLElement)=>{
     if(closeTimer.current!==null)window.clearTimeout(closeTimer.current);
-    const rect=element.getBoundingClientRect(),width=Math.min(480,window.innerWidth-24),height=300;
+    const rect=element.getBoundingClientRect(),width=Math.min(480,window.innerWidth-24),height=isMobileLayout()?Math.min(480,window.innerHeight-24):300;
     const left=Math.min(Math.max(12,rect.left),window.innerWidth-width-12);
     const top=window.innerHeight-rect.bottom>height+18?rect.bottom+9:Math.max(12,rect.top-height-9);
     setInspection({left,top,width});
   };
-  const scheduleClose=()=>{if(closeTimer.current!==null)window.clearTimeout(closeTimer.current);closeTimer.current=window.setTimeout(()=>setInspection(null),180)};
+  const scheduleClose=()=>{if(isMobileLayout()&&mobilePreviewOpen)return;if(closeTimer.current!==null)window.clearTimeout(closeTimer.current);closeTimer.current=window.setTimeout(()=>setInspection(null),180)};
   useEffect(()=>()=>{if(closeTimer.current!==null)window.clearTimeout(closeTimer.current)},[]);
+  useEffect(()=>{if(!mobilePreviewOpen)setInspection(null)},[mobilePreviewOpen]);
   const tooltipId=`combat-deck-tip-${card.id}-${card.isShiny?'shiny':'normal'}`;
+  const mobileOverlayActive=isMobileLayout()&&mobilePreviewOpen;
   return <>
-    <button type="button" className={`combat-pool-card ${rarity}${chosen?' selected':''}${card.isShiny?' shiny':''}`} onClick={onToggle} onMouseEnter={event=>showInspection(event.currentTarget)} onMouseLeave={scheduleClose} onFocus={event=>showInspection(event.currentTarget)} onBlur={()=>setInspection(null)} aria-pressed={chosen} aria-describedby={inspection?tooltipId:undefined} aria-label={`${card.name}, ${fullCombatExplanation(card)}`}>
+    <button type="button" className={`combat-pool-card ${rarity}${chosen?' selected':''}${card.isShiny?' shiny':''}`} onClick={event=>{if(isMobileLayout()){if(mobilePreviewOpen){setInspection(null);onMobilePreviewToggle(false)}else{showInspection(event.currentTarget);onMobilePreviewToggle(true)}return}onToggle()}} onMouseEnter={event=>{if(!isMobileLayout())showInspection(event.currentTarget)}} onMouseLeave={scheduleClose} onFocus={event=>{if(!isMobileLayout())showInspection(event.currentTarget)}} onBlur={()=>{if(!isMobileLayout())setInspection(null)}} aria-pressed={chosen} aria-describedby={inspection?tooltipId:undefined} aria-label={`${card.name}, ${fullCombatExplanation(card)}`}>
       <span className="combat-pool-art">{card.imageUrl?<img src={card.imageUrl} alt="" loading="lazy"/>:<i>◈</i>}{card.isShiny&&<b className="combat-shiny-mark">✦</b>}{chosen&&<b className="combat-chosen-mark"><Check size={12}/></b>}</span>
       <span className="combat-pool-meta"><strong>{card.name}</strong><small>{card.setName}</small><em>{card.rarity} · {RARITY_EFFECT[card.rarity]??'Aucun effet'}</em><small className="combat-role-label">{role.module}</small></span><b className="combat-pool-power">{getCombatBasePower(card)}</b>
     </button>
-    {inspection&&createPortal(<CombatCardEffectOverlay id={tooltipId} card={card} theme={theme} style={{left:inspection.left,top:inspection.top,width:inspection.width,maxHeight:'calc(100vh - 24px)',overflowY:'auto'}} onMouseEnter={()=>{if(closeTimer.current!==null)window.clearTimeout(closeTimer.current)}} onMouseLeave={()=>setInspection(null)}/>,document.body)}
+    {inspection&&createPortal(mobileOverlayActive
+      ?<div className="combat-deck-mobile-scrim" role="presentation" onClick={event=>{if(event.target===event.currentTarget){setInspection(null);onMobilePreviewToggle(false)}}}>
+        <CombatCardEffectOverlay id={tooltipId} card={card} theme={theme} style={{position:'absolute',left:inspection.left,top:inspection.top,width:inspection.width,maxHeight:'calc(100vh - 24px)',overflowY:'auto'}} selected={chosen} mobileDeckAction onDeckAction={selected=>{onMobileDeckAction(selected);setInspection(null);onMobilePreviewToggle(false)}} onMouseEnter={()=>{if(closeTimer.current!==null)window.clearTimeout(closeTimer.current)}}/>
+      </div>
+      :<CombatCardEffectOverlay id={tooltipId} card={card} theme={theme} style={{left:inspection.left,top:inspection.top,width:inspection.width,maxHeight:'calc(100vh - 24px)',overflowY:'auto'}} selected={chosen} onMouseEnter={()=>{if(closeTimer.current!==null)window.clearTimeout(closeTimer.current)}} onMouseLeave={()=>{if(!isMobileLayout())setInspection(null)}}/>,document.body)}
   </>;
 }
 
@@ -216,6 +225,7 @@ export default function CombatArena({user,onLogin,view='combat',onNavigateToDeck
   const [deckRarityFilter,setDeckRarityFilter]=useState('all');
   const [deckRoleFilter,setDeckRoleFilter]=useState('all');
   const [deckSeriesFilter,setDeckSeriesFilter]=useState('all');
+  const [deckMobilePreviewKey,setDeckMobilePreviewKey]=useState<string|null>(null);
   const [activeMatchId,setActiveMatchId]=useState<string|null>(null);
   const [activeMatch,setActiveMatch]=useState<MatchDetail|null>(null);
   const [battle,setBattle]=useState<BattleState|null>(null);
@@ -315,6 +325,21 @@ export default function CombatArena({user,onLogin,view='combat',onNavigateToDeck
       if(current.some(selected=>cards.find(item=>keyOf(item)===selected)?.id===card.id)){setPageError('La même carte ne peut entrer qu’une fois dans le deck, même en version Shiny.');return current}
       if(limitRarities.includes(card.rarity)&&cards.find(item=>current.includes(keyOf(item))&&item.rarity===card.rarity)){setPageError(`Une seule carte ${card.rarity.toLowerCase()} peut entrer dans le deck.`);return current}
       return [...current,key];
+    });
+  }
+
+  // Mobile inspector actions express the intended state instead of toggling it.
+  // That makes a repeated tap/click harmless: "remove" can never add the card back.
+  function setDeckCardSelected(card:OwnedCard,selected:boolean){
+    const key=keyOf(card);setPageError('');
+    setSelectedDeck(current=>{
+      const alreadySelected=current.includes(key);
+      if(alreadySelected===selected)return current;
+      if(!selected)return setCombatDeckSelection(current,key,false);
+      if(current.length>=12){setPageError('Un deck peut contenir 12 cartes maximum.');return current}
+      if(current.some(selectedKey=>cards.find(item=>keyOf(item)===selectedKey)?.id===card.id)){setPageError('La même carte ne peut entrer qu’une fois dans le deck, même en version Shiny.');return current}
+      if(limitRarities.includes(card.rarity)&&cards.find(item=>current.includes(keyOf(item))&&item.rarity===card.rarity)){setPageError(`Une seule carte ${card.rarity.toLowerCase()} peut entrer dans le deck.`);return current}
+      return setCombatDeckSelection(current,key,true);
     });
   }
 
@@ -485,7 +510,7 @@ export default function CombatArena({user,onLogin,view='combat',onNavigateToDeck
         </div>
         {loading?<div className="combat-empty"><LoaderCircle className="spin"/>Lecture de la collection…</div>:cards.length===0?<div className="combat-empty"><Sparkles/><strong>Ton arsenal est encore vide.</strong><span>Ouvre quelques boosters et reviens composer ton premier deck.</span></div>:<div className="combat-card-pool" data-combat-tutorial="cards">{filteredCards.map(card=>{
           const key=keyOf(card),chosen=selectedDeck.includes(key);
-          return <DeckPoolCard key={key} card={card} chosen={chosen} theme={theme} onToggle={()=>toggleDeck(card)}/>
+          return <DeckPoolCard key={key} card={card} chosen={chosen} theme={theme} mobilePreviewOpen={deckMobilePreviewKey===key} onMobilePreviewToggle={open=>setDeckMobilePreviewKey(open?key:null)} onToggle={()=>toggleDeck(card)} onMobileDeckAction={selected=>setDeckCardSelected(card,selected)}/>
         })}</div>}
         <div className="combat-selected-strip"><div className="combat-selected-heading"><span>COMPOSITION</span><span>{selectedCards.length<8?`${8-selectedCards.length} cartes restantes minimum`:deckIssue||'Deck prêt'}</span></div><div className="combat-selected-list">{selectedCards.map(card=><button type="button" key={keyOf(card)} title={`Retirer ${card.name}`} onClick={()=>toggleDeck(card)}><span style={{'--combat-rarity':rarityColor[card.rarity]} as React.CSSProperties}>{card.isShiny?'✦ ':''}{card.name}</span><X size={12}/></button>)}{selectedCards.length===0&&<small>Sélectionne les cartes que tu veux engager.</small>}</div></div>
       </div>

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { db } from '../lib/local-db';
 import { CombatRuleError } from '../lib/combat-engine';
 import { validateOwnedCombatDeck, type CombatDeckReference } from '../lib/combat-decks';
+import { setCombatDeckSelection } from '../lib/combat-deck-selection';
 
 const fixtureId=`test_decks_${randomUUID().replaceAll('-','')}`;
 const setId=`${fixtureId}_set`;
@@ -11,6 +12,16 @@ let userId:number|undefined;
 const refs:CombatDeckReference[]=[];
 
 describe('decks de combat enregistrés',()=>{
+  it('retire une carte de façon idempotente pour les actions de l’inspecteur mobile',()=>{
+    const initial=['card-a:0','card-b:0'];
+    const removed=setCombatDeckSelection(initial,'card-a:0',false);
+    expect(removed).toEqual(['card-b:0']);
+    expect(setCombatDeckSelection(removed,'card-a:0',false)).toEqual(['card-b:0']);
+    const added=setCombatDeckSelection(removed,'card-a:0',true);
+    expect(added).toEqual(['card-b:0','card-a:0']);
+    expect(setCombatDeckSelection(added,'card-a:0',true)).toEqual(['card-b:0','card-a:0']);
+  });
+
   afterAll(()=>{
     if(userId)db.prepare('DELETE FROM card_instances WHERE owner_id=?').run(userId);
     for(const ref of refs)db.prepare('DELETE FROM cards WHERE id=?').run(ref.cardId);
