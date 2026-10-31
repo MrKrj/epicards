@@ -3,7 +3,10 @@ import { db, PACK_LIMIT, PACK_WINDOW_MS, pickRarity } from './local-db';
 import { getDropQuota } from './drop-quota';
 
 type CardRow={id:string;name:string;description:string;rarity:string;category:string;collection_value:number;set_id:string;image_url:string|null};
-const SHINY_DROP_DENOMINATOR=250; // 0.4% par carte
+// Calibré pour obtenir 1% de chance qu'un booster de cinq cartes contienne au moins un shiny.
+const SHINY_CHANCE_PER_CARD=1-Math.pow(0.99,1/5);
+const SHINY_RANDOM_SCALE=1_000_000_000_000;
+const SHINY_RANDOM_THRESHOLD=Math.round(SHINY_CHANCE_PER_CARD*SHINY_RANDOM_SCALE);
 type CollectionRow={id:string;name:string;is_default:number};
 export type BoosterResult =
  | {ok:true;boosterId:string;cards:Array<CardRow&{is_shiny:boolean}>;instanceIds:string[];recyclableDuplicateCount:number;remainingPacks:number;retryAt:number|null;cost:number;balance:number}
@@ -42,7 +45,7 @@ export function openBooster(userId:number,setId:string|null=null,free=true,now=D
    let pool=db.prepare('SELECT id,name,description,rarity,category,collection_value,set_id,image_url FROM cards WHERE is_active=1 AND booster_eligible=1 AND set_id=? AND rarity=?').all(collection.id,rarity) as CardRow[];
    if(!pool.length)pool=db.prepare('SELECT id,name,description,rarity,category,collection_value,set_id,image_url FROM cards WHERE is_active=1 AND booster_eligible=1 AND set_id=?').all(collection.id) as CardRow[];
    if(!pool.length)throw new Error('Cette collection ne contient aucune carte active.');
-   const card=pool[randomInt(pool.length)],instanceId=randomUUID(),isShiny=randomInt(SHINY_DROP_DENOMINATOR)===0;
+   const card=pool[randomInt(pool.length)],instanceId=randomUUID(),isShiny=randomInt(SHINY_RANDOM_SCALE)<SHINY_RANDOM_THRESHOLD;
    if(!isShiny&&(card.rarity==='Commune'||card.rarity==='Peu commune')&&hasPriorVariant.get(userId,card.id,0,boosterId))recyclableDuplicateCount++;
    addInstance.run(instanceId,card.id,userId,now,boosterId,Number(isShiny));addHistory.run(userId,instanceId,now);allCards.push({...card,is_shiny:isShiny});instanceIds.push(instanceId);
   }

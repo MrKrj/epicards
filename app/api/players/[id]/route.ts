@@ -24,8 +24,32 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       WHERE ci.owner_id=? AND ci.recycled_at IS NULL
     ), shiny_total AS (
       SELECT COUNT(*) AS shiny_cards FROM card_instances WHERE owner_id=? AND recycled_at IS NULL AND is_shiny=1
+    ), wallet_stats AS (
+      SELECT user_id,
+        COALESCE(SUM(CASE WHEN amount>0 AND reason NOT LIKE 'remboursement_%' THEN amount ELSE 0 END),0) AS fragments_accumulated,
+        COALESCE(SUM(CASE
+          WHEN reason LIKE 'Recyclage de % carte(s)' OR reason LIKE 'Recyclage de % doublon(s)'
+          THEN CAST(substr(reason,14,instr(substr(reason,14),' ')-1) AS INTEGER)
+          ELSE 0 END),0) AS cards_recycled
+      FROM wallet_transactions GROUP BY user_id
+    ), booster_stats AS (
+      SELECT user_id,COUNT(*) AS boosters_opened FROM booster_openings GROUP BY user_id
+    ), auction_activity AS (
+      SELECT seller_id AS user_id,1 AS sold,0 AS bought,price AS sale_price,NULL AS purchase_price FROM auction_sales
+      UNION ALL
+      SELECT buyer_id AS user_id,0 AS sold,1 AS bought,NULL AS sale_price,price AS purchase_price FROM auction_sales
+    ), auction_stats AS (
+      SELECT user_id, SUM(sold) AS auctions_sold, SUM(bought) AS auctions_bought,
+        MAX(sale_price) AS largest_sale,MAX(purchase_price) AS largest_purchase
+      FROM auction_activity GROUP BY user_id
     )
     SELECT u.id,u.username,u.created_at,catalogue.total_cards,shiny_total.shiny_cards,
+      COALESCE(wallet_stats.fragments_accumulated,0) AS fragments_accumulated,
+      COALESCE(wallet_stats.cards_recycled,0) AS cards_recycled,
+      COALESCE(booster_stats.boosters_opened,0) AS boosters_opened,
+      COALESCE(auction_stats.auctions_sold,0) AS auctions_sold,
+      COALESCE(auction_stats.auctions_bought,0) AS auctions_bought,
+      auction_stats.largest_sale,auction_stats.largest_purchase,
       COUNT(owned_cards.id) AS distinct_cards,
       COUNT(CASE WHEN owned_cards.rarity='Secrète' THEN 1 END) AS secret_cards,
       COUNT(CASE WHEN owned_cards.rarity='Légendaire' THEN 1 END) AS legendary_cards,
@@ -34,9 +58,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       COUNT(CASE WHEN owned_cards.rarity='Peu commune' THEN 1 END) AS uncommon_cards,
       COUNT(CASE WHEN owned_cards.rarity='Commune' THEN 1 END) AS common_cards
     FROM users u CROSS JOIN catalogue CROSS JOIN shiny_total LEFT JOIN owned_cards ON 1=1
+      LEFT JOIN wallet_stats ON wallet_stats.user_id=u.id
+      LEFT JOIN booster_stats ON booster_stats.user_id=u.id
+      LEFT JOIN auction_stats ON auction_stats.user_id=u.id
     WHERE u.id=? GROUP BY u.id
   `).get(playerId, playerId, playerId) as {
     id:number;username:string;created_at:number;total_cards:number;shiny_cards:number;distinct_cards:number;
+    fragments_accumulated:number;cards_recycled:number;boosters_opened:number;auctions_sold:number;auctions_bought:number;
+    largest_sale:number|null;largest_purchase:number|null;
     secret_cards:number;legendary_cards:number;epic_cards:number;rare_cards:number;uncommon_cards:number;common_cards:number;
   } | undefined;
 

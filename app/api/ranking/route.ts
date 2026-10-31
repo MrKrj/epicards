@@ -27,8 +27,8 @@ export async function GET() {
     LEFT JOIN card_instances ci ON ci.owner_id=u.id AND ci.recycled_at IS NULL
     LEFT JOIN cards c ON c.id=ci.card_id AND c.is_active=1
     GROUP BY u.id
-    ORDER BY distinct_cards DESC,secret_cards DESC,legendary_cards DESC,
-      epic_cards DESC,rare_cards DESC,uncommon_cards DESC,common_cards DESC,
+    ORDER BY CASE WHEN catalogue.total_cards=0 THEN 0 ELSE distinct_cards*1.0/catalogue.total_cards END DESC,
+      shiny_cards DESC,
       u.username COLLATE NOCASE ASC
   `).all();
 
